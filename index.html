@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>S&amp;S Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header" id="header">
+  <div class="glow-line tl-1"></div>
+  <div class="glow-line tl-2"></div>
+  <div class="glow-line br-1"></div>
+  <div class="glow-line br-2"></div>
+  <img class="logo" src="assets/logo.png" alt="S&amp;S Collection">
+  <div class="tagline" id="tagline">Tu estilo, nuestra pasión</div>
+</header>
+
+<div class="edit-bar" id="editBar" hidden>
+  <span id="editBarLabel">MODO EDICIÓN · 0 seleccionadas</span>
+  <button type="button" id="editDoneBtn">Listo</button>
+</div>
+
+<nav class="cat-row" id="catRow"></nav>
+
+<main>
+  <div id="gridWrap"></div>
+</main>
+
+<div class="edit-action-bar" id="editActionBar" hidden>
+  <button type="button" class="btn-delete" id="deleteBtn">Eliminar (0)</button>
+  <button type="button" class="btn-add" id="addBtn">+ Agregar prenda</button>
+</div>
+
+<div class="overlay" id="pinOverlay" hidden>
+  <div class="sheet">
+    <h2>Ingresa tu clave</h2>
+    <div class="pin-dots" id="pinDots"></div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="keypad" id="pinKeypad"></div>
+    <button type="button" class="btn-ghost" id="pinCancelBtn">Cancelar</button>
+  </div>
+</div>
+
+<div class="overlay" id="addOverlay" hidden>
+  <div class="sheet">
+    <div class="step-indicator" id="stepIndicator">PASO 1 DE 2</div>
+    <div class="step-progress half" id="stepProgress"></div>
+
+    <div id="addStep1">
+      <label class="dropzone" id="dropzone">
+        <span id="dropzoneText">+ Elegir foto de la galería</span>
+        <input type="file" accept="image/*" id="photoInput" hidden>
+      </label>
+      <div class="cat-chips" id="catChips"></div>
+      <div class="row-btns">
+        <button type="button" class="btn-gold" id="continueBtn" disabled>Continuar</button>
+      </div>
+    </div>
+
+    <div id="addStep2" hidden>
+      <div class="add-preview-row">
+        <img id="photoPreview" alt="">
+        <div class="price-field" style="flex:1">
+          <input type="number" inputmode="numeric" id="priceInput" placeholder="Ej: 120000">
+          <div class="price-hint">Se muestra como <span id="pricePreview">$0</span></div>
+        </div>
+      </div>
+      <div class="row-btns">
+        <button type="button" class="btn-outline" id="backBtn">Atrás</button>
+        <button type="button" class="btn-gold" id="publishBtn" disabled>Publicar</button>
+      </div>
+    </div>
+
+    <button type="button" class="btn-ghost" id="addCancelBtn">Cancelar</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightboxOverlay" hidden>
+  <img id="lightboxPhoto" alt="">
+  <div class="lightbox-info">
+    <span class="lightbox-price" id="lightboxPrice"></span>
+    <a class="lightbox-whatsapp" id="lightboxWhatsapp" target="_blank" rel="noopener">Pedir por WhatsApp</a>
+  </div>
+  <div class="lightbox-hint">Toca para cerrar</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
