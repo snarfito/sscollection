@@ -8,21 +8,41 @@ behind a 4-digit PIN. Visual design is finalized in
 ("Etiqueta" direction — price-tag cards + gold light-effect header).
 
 ## Reused pattern
-`../SoulsColors` (same Vercel team, `snarfito`) already solves the same
-shape of problem: static HTML/JS + Vercel Serverless Functions +
-`@vercel/blob` for both images and a JSON "database" blob, gated by a
-password header cached in `sessionStorage`. This project reuses that
-pattern directly instead of introducing a framework or a database.
+`../SoulsColors` (same Vercel team, `snarfito`) solves a similar-shaped
+problem: static HTML/JS + Vercel Serverless Functions + `@vercel/blob`
+for images, gated by a password header cached in `sessionStorage`. This
+project reuses that shape for the frontend and photo storage, but
+**not** SoulsColors' pattern of also storing its JSON "database" in
+Blob — see "Storage revision" below for why.
 
 ## Stack
 - No frontend framework, no build step — plain HTML/CSS/JS, matching
   `reference.html`'s markup/CSS as closely as possible.
-- Vercel Serverless Functions (`/api`) for the only two things that need
-  a server: verifying the PIN and writing shared data (customers must
-  see the owner's edits without a redeploy).
-- `@vercel/blob` for photo storage and for the single JSON data file.
+- Vercel Serverless Functions (`/api`) for the only things that need a
+  server: verifying the PIN and writing shared data (customers must see
+  the owner's edits without a redeploy).
+- `@vercel/blob` for photo storage. Upstash Redis (own account, not the
+  Vercel Marketplace installation — see below) for the item list.
 - Deploy: GitHub repo `snarfito/sscollection` connected to a new Vercel
   project on the `snarfito` Pro team.
+
+## Storage revision (post-implementation)
+The original design stored the item list as a JSON file in Vercel Blob
+(`content/catalog.json`), mirroring SoulsColors. Building it exposed a
+real problem: the public Blob URL sits behind a CDN cached for up to 30
+days, and even with `useCache:false` and `allowOverwrite`, writes took
+several seconds (sometimes longer) to become visible to reads — for the
+owner's own next reload and for customers. That's too long an "is it
+broken?" window for an add/delete flow meant to feel immediate.
+
+Fix: item metadata moved to Upstash Redis (`redis.get`/`redis.set` on
+one key), which has no such propagation lag — a write is visible to the
+very next read. Photos stay in Vercel Blob (they don't change after
+upload, so its caching is harmless there, and re-reading them isn't on
+the write-then-read-immediately critical path the item list is on).
+The user chose to provision Redis directly at upstash.com (their own
+account) rather than through the Vercel Marketplace, for portability
+across Vercel accounts/teams.
 
 ## File structure
 ```
@@ -33,14 +53,18 @@ js/
   admin.js               PIN keypad, edit mode, add/delete flow
   api-client.js          fetch wrappers for /api/*
 api/
-  content.js            GET (public) / PUT (PIN-gated) catalog JSON
+  content.js            GET (public) / PUT (PIN-gated) catalog
   upload.js              POST (PIN-gated) photo -> Vercel Blob
-  delete.js              DELETE (PIN-gated) photo + item
+  delete.js              DELETE (PIN-gated) photo blob cleanup only
   verify-pin.js          POST (PIN-gated, no side effect) unlock check
+  _lib/
+    catalog.js           readCatalog/writeCatalog against Upstash Redis
+    auth.js               PIN check shared by all four handlers
+    validate.js            item/payload shape validation
 assets/                 logo.png, ic-dama.png, ic-caballero.png,
                         ic-zapatos.png, ic-bolsos.png (copied as-is
                         from design_handoff_catalogo/assets)
-package.json            @vercel/blob dependency, "type": "module"
+package.json            @vercel/blob + @upstash/redis, "type": "module"
 vercel.json             cleanUrls
 .gitignore              node_modules, .vercel, .env*.local
 README.md               env vars + local dev + deploy notes
@@ -54,13 +78,12 @@ handoff spec, and a fixed env-var PIN is simpler and safer. Shop name
 and tagline are static text in `index.html` per the finalized design.
 
 ## Data model
-One JSON blob, `content/catalog.json`:
+One Redis key (`sscollection:catalog`) holding the items array directly
+(Upstash's client serializes/deserializes JSON automatically):
 ```json
-{
-  "items": [
-    { "id": "it_...", "image": "https://...blob.vercel-storage.com/...", "price": 120000, "category": "Dama" }
-  ]
-}
+[
+  { "id": "it_...", "image": "https://...blob.vercel-storage.com/...", "price": 120000, "category": "Dama" }
+]
 ```
 Categories are the fixed four from the spec (`Dama`, `Caballero`,
 `Zapatos`, `Bolsos`) — not user-editable.
@@ -72,19 +95,28 @@ Categories are the fixed four from the spec (`Dama`, `Caballero`,
   the client can build the `wa.me` link.
 - `BLOB_READ_WRITE_TOKEN` — auto-provisioned when the Vercel Blob store
   is created; no manual entry needed.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — from a Redis
+  database created directly at upstash.com (not the Vercel Marketplace
+  installation, for account portability), added manually as Vercel env
+  vars in all three environments.
 
 ## API contracts
 - `GET /api/content` → `200 { items: [...], whatsapp: "573..." }`.
-  Public, cached (`s-maxage=30, stale-while-revalidate=120`) like
-  SoulsColors' `content.js`.
-- `PUT /api/content` (header `x-admin-pin`) → replaces `items`.
-  `401` if the PIN doesn't match `ADMIN_PIN`.
-- `POST /api/upload?id=<itemId>` (header `x-admin-pin`, raw image body)
-  → resizes/compresses client-side first (canvas, max 1000px,
-  JPEG q=0.72 — logic already written in the old `catalogo-s-and-s.html`
+  Public, no caching header — the item list changes on every add/delete
+  and is small, so there's nothing worth caching.
+- `PUT /api/content` (header `x-admin-pin`) → replaces `items` in Redis.
+  `401` if the PIN doesn't match `ADMIN_PIN`. Callers that already know
+  the full intended list (add/delete flows, both hold `state.items` in
+  memory) send it directly here rather than asking the server to
+  read-modify-write.
+- `POST /api/upload?id=<itemId>` (header `x-admin-pin`, raw image body
+  sent as `Content-Type: application/octet-stream` — see note below)
+  → resizes/compresses client-side first (canvas, max 1000px, JPEG
+  q=0.72 — logic already written in the old `catalogo-s-and-s.html`
   draft, reused as-is) → stores in Blob → `200 { url }`. `401` on bad PIN.
-- `DELETE /api/delete?id=<itemId>` (header `x-admin-pin`) → deletes the
-  blob and the item. `401` on bad PIN.
+- `DELETE /api/delete?id=<itemId>` (header `x-admin-pin`) → deletes only
+  the photo blob for that id. Best-effort; the item itself is already
+  gone from Redis via the `PUT` the client sent first.
 - `POST /api/verify-pin` (header `x-admin-pin`) → `200 {ok:true}` or
   `401`. No side effect — exists purely so the PIN keypad can check
   without mutating anything.
@@ -103,13 +135,15 @@ incorrecta" state.
   pattern ("No se pudo guardar…") and leave local state untouched so
   the owner can retry — same behavior already in the old draft.
 - Photo upload failures abort the add flow at step 2 without touching
-  `catalog.json`.
+  the catalog.
+- A `401` on any write clears the cached PIN and bounces back to the
+  PIN prompt, rather than failing silently in a loop.
 
 ## Known ceiling (ponytail)
-Single JSON blob read-modify-write for `catalog.json` has a race if two
-admin sessions save at the same time — acceptable for one owner editing
-from one device at a time. Upgrade path if that ever matters: move
-items to Vercel KV/Postgres with per-item writes.
+Two admin sessions saving at the same instant can still overwrite each
+other's changes (last write wins on the whole item list) — acceptable
+for one owner editing from one device at a time. Upgrade path if that
+ever matters: per-item Redis keys or a proper transaction.
 
 ## Testing / self-check
 No framework. One `scripts/smoke.mjs` (Node, `assert`-based) that hits the
@@ -125,6 +159,8 @@ persistence is shared, not local).
 2. Create Vercel project on `snarfito` team from that repo.
 3. Add a Blob store to the project (Storage tab) — sets
    `BLOB_READ_WRITE_TOKEN` automatically.
-4. Set `ADMIN_PIN=0722` and `WHATSAPP_NUMBER=<owner's number>` in
-   Project Settings → Environment Variables.
-5. Deploy.
+4. Create a Redis database at upstash.com (own account) and set
+   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` in Project
+   Settings → Environment Variables.
+5. Set `ADMIN_PIN=0722` and `WHATSAPP_NUMBER=<owner's number>` there too.
+6. Deploy.

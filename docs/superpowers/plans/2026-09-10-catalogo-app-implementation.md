@@ -4,9 +4,9 @@
 
 **Goal:** Build and deploy a mobile-first product catalog for S&S Collection — customers browse by category and order via WhatsApp; the owner adds/removes items behind a 4-digit PIN.
 
-**Architecture:** Static HTML/CSS/JS (no framework, no build step) served by Vercel, backed by Vercel Serverless Functions in `/api` that read/write a single JSON blob (`content/catalog.json`) and product photos in Vercel Blob storage. PIN-gated writes, no database. This mirrors the working `../SoulsColors` project on the same Vercel account.
+**Architecture:** Static HTML/CSS/JS (no framework, no build step) served by Vercel, backed by Vercel Serverless Functions in `/api`. The item list lives in Upstash Redis (immediate read-after-write); product photos live in Vercel Blob storage. PIN-gated writes. The frontend/photo-storage half mirrors the working `../SoulsColors` project on the same Vercel account — the item-list storage does not (see the `Storage revision` note under Task 8: Blob-as-JSON-store was tried first and replaced after testing showed multi-second write-visibility lag).
 
-**Tech Stack:** Vanilla JS (ES modules), `@vercel/blob`, Vercel Serverless Functions (Node.js runtime), Node's built-in `node:test` for unit tests.
+**Tech Stack:** Vanilla JS (ES modules), `@vercel/blob`, `@upstash/redis`, Vercel Serverless Functions (Node.js runtime), Node's built-in `node:test` for unit tests.
 
 **Spec:** `docs/superpowers/specs/2026-09-10-catalogo-app-design.md`
 
@@ -15,6 +15,7 @@
 - Categories are exactly `Dama`, `Caballero`, `Zapatos`, `Bolsos` — fixed, not user-editable.
 - Edit-mode PIN: `0722`. Stored only as the Vercel env var `ADMIN_PIN`, never in source.
 - `WHATSAPP_NUMBER` is a Vercel env var (not a secret), exposed to the client via `GET /api/content`.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` come from a Redis database created directly at upstash.com (not the Vercel Marketplace installation) — the user's choice, for portability across Vercel accounts/teams.
 - Colors: bg `#0B0B0C`, surface `#151311`, borders `#262119`/`#201B15`/`#2A241B`, gold `#C9A227`, gold-light `#E8C468`, cream `#F3EAD8`, ink `#141110`, wine `#7A2230`/`#E0857B`.
 - Fonts: `Playfair Display` (500/600/700, italic 500) for headings/prices/tagline; `Jost` (300/400/500/600) for UI/labels.
 - Desktop breakpoint: `min-width: 900px`.
@@ -55,7 +56,8 @@ cp design_handoff_catalogo/assets/logo.png design_handoff_catalogo/assets/ic-dam
     "test": "node --test"
   },
   "dependencies": {
-    "@vercel/blob": "^2.8.0"
+    "@vercel/blob": "^2.8.0",
+    "@upstash/redis": "^1.38.0"
   }
 }
 ```
@@ -63,7 +65,10 @@ cp design_handoff_catalogo/assets/logo.png design_handoff_catalogo/assets/ic-dam
 (`build` is a no-op — `vercel dev` refuses to start without one even for a
 static/no-framework project. `@vercel/blob` is pinned to the current `2.x`
 major rather than SoulsColors' `0.27.3`: that older version pulls a
-vulnerable `undici`; `2.8.0` exports the same `put`/`list`/`del` API.)
+vulnerable `undici`; `2.8.0` exports the same `put`/`list`/`del` API.
+`@upstash/redis` — same package `../rifas` already uses — backs the item
+list; see Task 8's `Storage revision` note for why Blob alone wasn't
+enough.)
 
 - [ ] **Step 3: Create `vercel.json`**
 
@@ -570,69 +575,92 @@ EOF
 
 ---
 
-### Task 8: `api/_lib/blob.js` + `api/content.js`
+### Task 8: `api/_lib/catalog.js` + `api/content.js`
 
-No unit test — this talks to live Vercel Blob storage, verified manually
+No unit test — this talks to a live Redis database, verified manually
 against `vercel dev` (which Task 2 confirmed works).
 
+**Revision note:** the first implementation of this task stored the
+catalog as a JSON file in Vercel Blob (`content/catalog.json`), matching
+`../SoulsColors`. Building and testing it surfaced a real problem: the
+public Blob URL sits behind a CDN cached up to 30 days, and even with
+`useCache:false` + `allowOverwrite`, writes took several seconds (or
+longer) to become visible to reads — including the writer's own very
+next read. That's an "is it broken?" window no add/delete flow should
+have. The fix, after checking in with the user, was to move the item
+list to Upstash Redis (provisioned directly at upstash.com, not through
+the Vercel Marketplace, for account portability) — `redis.get`/`set` has
+no such propagation lag. Photos stay in Vercel Blob (Task 10); they
+don't change after upload, so Blob's caching is harmless there.
+
 **Files:**
-- Create: `api/_lib/blob.js`
+- Create: `api/_lib/catalog.js`
 - Create: `api/content.js`
 
 **Interfaces:**
 - Consumes: `requireAdmin` (Task 6), `validateItemsPayload` (Task 7).
 - Produces: `readCatalog()` → `{items: Item[]}`, `writeCatalog(catalog)` —
-  consumed by `api/delete.js` (Task 11).
+  not consumed elsewhere (Task 11's `api/delete.js` only cleans up the
+  photo blob; the catalog mutation goes through `PUT /api/content`,
+  called by `js/admin.js`, Task 17/18, with the full list it already
+  holds in memory — avoiding a server-side read entirely).
 
-- [ ] **Step 1: Implement the blob-backed store**
+- [ ] **Step 1: Provision Redis and set env vars**
+
+Create a Redis database at [upstash.com](https://upstash.com) (own
+account, free tier). From its REST API section, get
+`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Add both as
+Vercel env vars on all three environments (production/preview/
+development) — e.g. via the `vercel:env` skill or:
+
+```bash
+for env in production preview development; do
+  printf '%s' "<the-url>" | vercel env add UPSTASH_REDIS_REST_URL "$env"
+  printf '%s' "<the-token>" | vercel env add UPSTASH_REDIS_REST_TOKEN "$env"
+done
+vercel env pull .env.local
+```
+
+- [ ] **Step 2: Implement the Redis-backed store**
 
 ```javascript
-// api/_lib/blob.js
-import { put, list } from '@vercel/blob';
+// api/_lib/catalog.js
+import { Redis } from '@upstash/redis';
 
-const CATALOG_PATH = 'content/catalog.json';
+const CATALOG_KEY = 'sscollection:catalog';
 
-export async function readCatalog() {
-  const { blobs } = await list({ prefix: 'content/' });
-  const target = blobs.find((b) => b.pathname === CATALOG_PATH);
-  if (!target) return { items: [] };
-  const res = await fetch(target.url, { cache: 'no-store' });
-  if (!res.ok) return { items: [] };
-  const data = await res.json();
-  return { items: Array.isArray(data.items) ? data.items : [] };
+function getRedis() {
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
 }
 
-// ponytail: read-modify-write on one JSON blob races if two admin
-// sessions save at once. Fine for one owner editing from one device;
-// move to Vercel KV/Postgres with per-item writes if that ever changes.
-// ponytail: read-modify-write on one JSON blob races if two admin
-// sessions save at once. Fine for one owner editing from one device;
-// move to Vercel KV/Postgres with per-item writes if that ever changes.
+export async function readCatalog() {
+  const items = await getRedis().get(CATALOG_KEY);
+  return { items: Array.isArray(items) ? items : [] };
+}
+
+// ponytail: read-modify-write races if two admin sessions save at once
+// (fine for one owner editing from one device). Move to per-item Redis
+// keys or a proper DB if that ever stops being good enough. Unlike the
+// Blob-backed version this replaced, Redis reads are immediately
+// consistent with the last write — no propagation lag to work around.
 export async function writeCatalog(catalog) {
-  await put(CATALOG_PATH, JSON.stringify(catalog), {
-    access: 'public',
-    contentType: 'application/json',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  await getRedis().set(CATALOG_KEY, catalog.items);
 }
 ```
 
-(`allowOverwrite: true` is required — the current `@vercel/blob` refuses to
-write to an existing pathname otherwise, and `writeCatalog` always writes
-to the same fixed `content/catalog.json`.)
-
-- [ ] **Step 2: Implement the content handler**
+- [ ] **Step 3: Implement the content handler**
 
 ```javascript
 // api/content.js
-import { readCatalog, writeCatalog } from './_lib/blob.js';
+import { readCatalog, writeCatalog } from './_lib/catalog.js';
 import { requireAdmin } from './_lib/auth.js';
 import { validateItemsPayload } from './_lib/validate.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
     const catalog = await readCatalog();
     return res.status(200).json({ items: catalog.items, whatsapp: process.env.WHATSAPP_NUMBER || '' });
   }
@@ -651,14 +679,16 @@ export default async function handler(req, res) {
 }
 ```
 
-(No `config.api.bodyParser = false` / manual stream reading — the Vercel
-Node runtime parses a `Content-Type: application/json` body into
-`req.body` regardless of that legacy config, both under `vercel dev` and
-in production, so reading the raw stream here just gets an empty buffer.
-`validateItemsPayload` already rejects `undefined`/malformed bodies with
-a clean `400`.)
+(No `config.api.bodyParser = false` / manual stream reading, and no
+`Cache-Control` header on the GET response — the item list is small and
+changes on every edit, so there's nothing worth caching, and caching it
+would only reintroduce the staleness problem this task exists to avoid.
+The Vercel Node runtime parses a `Content-Type: application/json` body
+into `req.body` regardless of the legacy `bodyParser` config, both under
+`vercel dev` and in production. `validateItemsPayload` already rejects
+`undefined`/malformed bodies with a clean `400`.)
 
-- [ ] **Step 3: Manually verify against `vercel dev`**
+- [ ] **Step 4: Manually verify against `vercel dev`**
 
 ```bash
 vercel dev --listen 3000 &
@@ -673,14 +703,14 @@ curl -s -o /dev/null -w '%{http_code}\n' -X PUT http://localhost:3000/api/conten
   -H 'Content-Type: application/json' -d '{"items":[]}'
 # Expected: 401
 
-# PUT with the right PIN -> 200, then GET reflects it
+# PUT with the right PIN -> 200, then GET reflects it IMMEDIATELY
 curl -s -X PUT http://localhost:3000/api/content \
   -H 'Content-Type: application/json' -H 'x-admin-pin: 0722' \
   -d '{"items":[{"id":"it_test","image":"https://example.com/a.jpg","price":1000,"category":"Dama"}]}'
 # Expected: {"ok":true}
 
 curl -s http://localhost:3000/api/content
-# Expected: the item from the previous PUT is now in "items"
+# Expected: the item from the previous PUT is already in "items" — no delay
 
 # clean up the test item
 curl -s -X PUT http://localhost:3000/api/content \
@@ -689,12 +719,12 @@ curl -s -X PUT http://localhost:3000/api/content \
 kill %1
 ```
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add api/_lib/blob.js api/content.js
+git add api/_lib/catalog.js api/content.js
 git commit -m "$(cat <<'EOF'
-Add catalog content API (GET public, PUT PIN-gated)
+Add catalog content API backed by Redis (GET public, PUT PIN-gated)
 
 Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_017nAr6Zzi3zSofhb2po5H7o
@@ -851,16 +881,22 @@ EOF
 - Create: `api/delete.js`
 
 **Interfaces:**
-- Consumes: `readCatalog`/`writeCatalog` (Task 8), `requireAdmin` (Task 6).
+- Consumes: `requireAdmin` (Task 6).
 - Produces: `DELETE /api/delete?id=<id>` → `200 {ok:true}` / `401`/`400` —
   consumed by `js/api-client.js` (Task 14).
+
+Only cleans up the photo blob for the given id. It does **not** touch
+the catalog in Redis — the caller (`js/admin.js`'s `deleteSelected`,
+Task 18) already holds the full current item list in memory and sends
+the remaining list directly via `PUT /api/content`, which is both
+simpler and avoids a server-side read of a resource the caller already
+knows the intended end-state of.
 
 - [ ] **Step 1: Implement**
 
 ```javascript
 // api/delete.js
 import { del, list } from '@vercel/blob';
-import { readCatalog, writeCatalog } from './_lib/blob.js';
 import { requireAdmin } from './_lib/auth.js';
 
 export default async function handler(req, res) {
@@ -872,15 +908,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'id inválido' });
   }
 
-  const catalog = await readCatalog();
-  const remaining = catalog.items.filter((it) => it.id !== id);
-  await writeCatalog({ items: remaining });
-
   try {
     const { blobs } = await list({ prefix: `photos/${id}` });
     for (const b of blobs) await del(b.url);
   } catch {
-    // Photo cleanup is best-effort; the catalog entry is already removed.
+    // Best-effort; the catalog entry removal (via PUT) is what matters.
   }
 
   res.status(200).json({ ok: true });
@@ -893,17 +925,21 @@ export default async function handler(req, res) {
 vercel dev --listen 3000 &
 sleep 3
 
-# seed one item
+# seed one item and its "photo" (any blob works for this check)
 curl -s -X PUT http://localhost:3000/api/content \
   -H 'Content-Type: application/json' -H 'x-admin-pin: 0722' \
   -d '{"items":[{"id":"it_deltest","image":"https://example.com/a.jpg","price":1000,"category":"Dama"}]}'
 
 curl -s -o /dev/null -w '%{http_code}\n' -X DELETE 'http://localhost:3000/api/delete?id=it_deltest' \
   -H 'x-admin-pin: 0722'
-# Expected: 200
+# Expected: 200 (the endpoint doesn't touch the catalog, so it returns
+# 200 here even without a matching photo blob to clean up)
 
+# the item itself is removed via PUT, same as the add flow:
+curl -s -X PUT http://localhost:3000/api/content \
+  -H 'Content-Type: application/json' -H 'x-admin-pin: 0722' -d '{"items":[]}'
 curl -s http://localhost:3000/api/content
-# Expected: "items":[] — the item is gone
+# Expected: "items":[] — immediately, no delay
 
 kill %1
 ```
@@ -2011,8 +2047,17 @@ EOF
   in edit mode)
 
 **Interfaces:**
-- Consumes: `deleteItem` (Task 14), `state`/`notify` (Task 13).
+- Consumes: `saveItems`/`deleteItem` (Task 14), `state`/`notify` (Task 13).
 - Produces: `toggleSelect(id)` — consumed by `js/main.js`.
+
+`deleteSelected` computes the remaining list from `state.items` (already
+in memory) and sends it in one `PUT` via `saveItems`, the same call the
+add flow already uses — rather than one `DELETE /api/delete` per
+selected item, each doing its own server-side read-modify-write (see
+Task 11 and the `Storage revision` note in the spec for why that path
+was changed). `deleteItem` is still called per id afterward, but only
+to clean up the photo blob — fire-and-forget, since it's not on the
+critical path for what customers see.
 
 - [ ] **Step 1: Append to `js/admin.js`**
 
@@ -2037,13 +2082,15 @@ async function deleteSelected() {
   if (ids.length === 0) return;
   $('deleteBtn').disabled = true;
   try {
-    for (const id of ids) {
-      await deleteItem(id, pin);
-    }
-    state.items = state.items.filter((it) => !ids.includes(it.id));
+    const remaining = state.items.filter((it) => !ids.includes(it.id));
+    await saveItems(remaining, pin);
+    state.items = remaining;
     state.selectedIds = [];
     notify();
     toast('Prenda(s) eliminada(s)');
+    for (const id of ids) {
+      deleteItem(id, pin).catch(() => {});
+    }
   } catch (err) {
     if (err.status === 401) {
       clearCachedPin();

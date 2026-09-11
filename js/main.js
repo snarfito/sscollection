@@ -2,7 +2,7 @@ import { state, onStateChange, notify } from './state.js';
 import { buildCategoryRowHTML, buildGridHTML } from './render.js';
 import { fetchCatalog } from './api-client.js';
 import { initLightbox, openLightbox } from './lightbox.js';
-import { initAdmin, openPinModal } from './admin.js';
+import { initAdmin, openPinModal, toggleSelect } from './admin.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -32,7 +32,10 @@ function wireCardClicks() {
   $('gridWrap').addEventListener('click', (e) => {
     const card = e.target.closest('.card');
     if (!card) return;
-    if (state.editMode) return; // Task 18 wires selection here
+    if (state.editMode) {
+      toggleSelect(card.getAttribute('data-id'));
+      return;
+    }
     const item = state.items.find((it) => it.id === card.getAttribute('data-id'));
     if (item) openLightbox(item, state.whatsapp);
   });

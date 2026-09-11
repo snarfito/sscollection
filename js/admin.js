@@ -1,7 +1,7 @@
 import { state, notify } from './state.js';
 import { CATEGORIES } from '../shared/categories.js';
 import { formatCOP } from './format.js';
-import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto } from './api-client.js';
+import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto, deleteItem } from './api-client.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -175,6 +175,45 @@ async function publishItem() {
   }
 }
 
+export function toggleSelect(id) {
+  const idx = state.selectedIds.indexOf(id);
+  if (idx === -1) state.selectedIds.push(id);
+  else state.selectedIds.splice(idx, 1);
+  notify();
+}
+
+async function deleteSelected() {
+  const pin = getCachedPin();
+  const ids = [...state.selectedIds];
+  if (ids.length === 0) return;
+  $('deleteBtn').disabled = true;
+  try {
+    // Compute the remaining list from what's already in memory and send
+    // it as one write, instead of one server-side read-modify-write per
+    // id — see api/delete.js for why. Photo cleanup can happen after,
+    // best-effort, since it doesn't affect what customers see.
+    const remaining = state.items.filter((it) => !ids.includes(it.id));
+    await saveItems(remaining, pin);
+    state.items = remaining;
+    state.selectedIds = [];
+    notify();
+    toast('Prenda(s) eliminada(s)');
+    for (const id of ids) {
+      deleteItem(id, pin).catch(() => {});
+    }
+  } catch (err) {
+    if (err.status === 401) {
+      clearCachedPin();
+      exitEditMode();
+      toast('Tu clave expiró, ingresa de nuevo');
+    } else {
+      toast('No se pudo eliminar. Intenta de nuevo.');
+    }
+  } finally {
+    $('deleteBtn').disabled = false;
+  }
+}
+
 export function initAdmin() {
   $('pinKeypad').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-key]');
@@ -206,4 +245,6 @@ export function initAdmin() {
     renderAddModal();
   });
   $('publishBtn').addEventListener('click', publishItem);
+
+  $('deleteBtn').addEventListener('click', deleteSelected);
 }
