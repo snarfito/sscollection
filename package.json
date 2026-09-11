@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "echo 'static site, nothing to build'",
-    "test": "node --test"
+    "test": "node --test",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
