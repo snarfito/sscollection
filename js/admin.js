@@ -1,5 +1,7 @@
 import { state, notify } from './state.js';
-import { getCachedPin, setCachedPin, verifyPin } from './api-client.js';
+import { CATEGORIES } from '../shared/categories.js';
+import { formatCOP } from './format.js';
+import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto } from './api-client.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -66,6 +68,113 @@ function exitEditMode() {
   notify();
 }
 
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ---- Add flow ---- */
+const addState = { step: 1, category: CATEGORIES[0], photoBlob: null, price: '' };
+
+function resetAddState() {
+  addState.step = 1;
+  addState.category = CATEGORIES[0];
+  addState.photoBlob = null;
+  addState.price = '';
+  $('photoInput').value = '';
+  $('dropzoneText').textContent = '+ Elegir foto de la galería';
+  $('priceInput').value = '';
+}
+
+function renderAddModal() {
+  $('addStep1').hidden = addState.step !== 1;
+  $('addStep2').hidden = addState.step !== 2;
+  $('stepIndicator').textContent = addState.step === 1 ? 'PASO 1 DE 2' : 'PASO 2 DE 2';
+  $('stepProgress').className = `step-progress ${addState.step === 1 ? 'half' : 'full'}`;
+  $('catChips').querySelectorAll('[data-cat]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-cat') === addState.category);
+  });
+  $('continueBtn').disabled = !addState.photoBlob;
+  $('publishBtn').disabled = !(addState.price && Number(addState.price) > 0);
+  $('pricePreview').textContent = formatCOP(addState.price || 0);
+}
+
+function buildCatChips() {
+  $('catChips').innerHTML = CATEGORIES.map((c) => `<button type="button" data-cat="${c}">${c}</button>`).join('');
+}
+
+function openAddModal() {
+  resetAddState();
+  buildCatChips();
+  renderAddModal();
+  $('addOverlay').hidden = false;
+}
+
+function closeAddModal() {
+  $('addOverlay').hidden = true;
+}
+
+function resizeImageFile(file, maxDim = 1000, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Imagen inválida'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = height * (maxDim / width); width = maxDim; }
+        else if (height >= width && height > maxDim) { width = width * (maxDim / height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onPhotoChosen(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  addState.photoBlob = await resizeImageFile(file);
+  $('dropzoneText').textContent = 'Foto elegida ✓';
+  renderAddModal();
+}
+
+async function publishItem() {
+  const pin = getCachedPin();
+  const id = 'it_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  $('publishBtn').disabled = true;
+  $('publishBtn').textContent = 'Publicando…';
+  try {
+    const { url } = await uploadPhoto(id, addState.photoBlob, pin);
+    const items = [...state.items, { id, image: url, price: Number(addState.price), category: addState.category }];
+    await saveItems(items, pin);
+    state.items = items;
+    closeAddModal();
+    notify();
+    toast('Prenda agregada');
+  } catch (err) {
+    if (err.status === 401) {
+      clearCachedPin();
+      exitEditMode();
+      toast('Tu clave expiró, ingresa de nuevo');
+    } else {
+      toast('No se pudo guardar. Intenta de nuevo.');
+    }
+  } finally {
+    $('publishBtn').disabled = false;
+    $('publishBtn').textContent = 'Publicar';
+  }
+}
+
 export function initAdmin() {
   $('pinKeypad').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-key]');
@@ -73,4 +182,28 @@ export function initAdmin() {
   });
   $('pinCancelBtn').addEventListener('click', closePinModal);
   $('editDoneBtn').addEventListener('click', exitEditMode);
+
+  $('addBtn').addEventListener('click', openAddModal);
+  $('addCancelBtn').addEventListener('click', closeAddModal);
+  $('photoInput').addEventListener('change', onPhotoChosen);
+  $('catChips').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-cat]');
+    if (!btn) return;
+    addState.category = btn.getAttribute('data-cat');
+    renderAddModal();
+  });
+  $('continueBtn').addEventListener('click', () => {
+    addState.step = 2;
+    renderAddModal();
+    $('photoPreview').src = URL.createObjectURL(addState.photoBlob);
+  });
+  $('backBtn').addEventListener('click', () => {
+    addState.step = 1;
+    renderAddModal();
+  });
+  $('priceInput').addEventListener('input', (e) => {
+    addState.price = e.target.value;
+    renderAddModal();
+  });
+  $('publishBtn').addEventListener('click', publishItem);
 }
