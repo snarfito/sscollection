@@ -51,21 +51,33 @@ cp design_handoff_catalogo/assets/logo.png design_handoff_catalogo/assets/ic-dam
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "echo 'static site, nothing to build'",
     "test": "node --test"
   },
   "dependencies": {
-    "@vercel/blob": "^0.27.3"
+    "@vercel/blob": "^2.8.0"
   }
 }
 ```
+
+(`build` is a no-op — `vercel dev` refuses to start without one even for a
+static/no-framework project. `@vercel/blob` is pinned to the current `2.x`
+major rather than SoulsColors' `0.27.3`: that older version pulls a
+vulnerable `undici`; `2.8.0` exports the same `put`/`list`/`del` API.)
 
 - [ ] **Step 3: Create `vercel.json`**
 
 ```json
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "outputDirectory": "."
 }
 ```
+
+(`outputDirectory: "."` is required because this project has no framework
+and no real build step — without it, Vercel expects build output in a
+`public/` folder and `vercel dev` fails with "No Output Directory named
+'public' found".)
 
 - [ ] **Step 4: Create `README.md`**
 
