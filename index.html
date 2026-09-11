@@ -103,6 +103,20 @@
   </div>
 </div>
 
+<div class="overlay" id="cropOverlay" hidden>
+  <div class="sheet">
+    <h2>Ajusta la foto</h2>
+    <div class="crop-frame" id="cropFrame">
+      <img id="cropImg" alt="" draggable="false">
+    </div>
+    <input type="range" id="cropZoom" min="0" max="100" value="0">
+    <div class="row-btns">
+      <button type="button" class="btn-outline" id="cropCancelBtn">Cancelar</button>
+      <button type="button" class="btn-gold" id="cropConfirmBtn">Recortar</button>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox" id="lightboxOverlay" hidden>
   <img id="lightboxPhoto" alt="">
   <div class="lightbox-info">

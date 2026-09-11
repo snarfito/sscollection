@@ -117,6 +117,10 @@ img{max-width:100%;display:block;}
 .btn-gold{background:linear-gradient(135deg,var(--gold-light),var(--gold));color:var(--ink);}
 .btn-gold:disabled{opacity:.5;}
 
+.crop-frame{position:relative;width:100%;max-width:280px;aspect-ratio:3/4;margin:0 auto;overflow:hidden;border-radius:12px;background:var(--bg);touch-action:none;}
+.crop-frame img{position:absolute;top:0;left:0;transform-origin:0 0;user-select:none;}
+#cropZoom{width:100%;margin:14px 0 0;accent-color:var(--gold);}
+
 /* Lightbox */
 .lightbox{position:fixed;inset:0;z-index:40;background:rgba(6,6,7,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;cursor:pointer;}
 .lightbox img{width:min(70vh,420px);aspect-ratio:3/4;object-fit:cover;border-radius:8px;}

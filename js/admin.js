@@ -3,6 +3,7 @@ import { CATEGORIES } from '../shared/categories.js';
 import { formatCOP } from './format.js';
 import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto, deleteItem } from './api-client.js';
 import { toast } from './toast.js';
+import { openCropper } from './cropper.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -109,33 +110,13 @@ function closeAddModal() {
   $('addOverlay').hidden = true;
 }
 
-function resizeImageFile(file, maxDim = 1000, quality = 0.72) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('Imagen inválida'));
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxDim) { height = height * (maxDim / width); width = maxDim; }
-        else if (height >= width && height > maxDim) { width = width * (maxDim / height); height = maxDim; }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 async function onPhotoChosen(e) {
   const file = e.target.files[0];
+  e.target.value = '';
   if (!file) return;
-  addState.photoBlob = await resizeImageFile(file);
+  const blob = await openCropper(file);
+  if (!blob) return;
+  addState.photoBlob = blob;
   $('dropzoneText').textContent = 'Foto elegida ✓';
   renderAddModal();
 }
@@ -195,8 +176,11 @@ function closeEditModal() {
 
 async function onEditPhotoChosen(e) {
   const file = e.target.files[0];
+  e.target.value = '';
   if (!file) return;
-  editState.photoBlob = await resizeImageFile(file);
+  const blob = await openCropper(file);
+  if (!blob) return;
+  editState.photoBlob = blob;
   $('editPhotoPreview').src = URL.createObjectURL(editState.photoBlob);
   $('editDropzoneText').textContent = 'Nueva foto elegida ✓';
 }
