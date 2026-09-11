@@ -2,6 +2,7 @@ import { state, onStateChange, notify } from './state.js';
 import { buildCategoryRowHTML, buildGridHTML } from './render.js';
 import { fetchCatalog } from './api-client.js';
 import { initLightbox, openLightbox } from './lightbox.js';
+import { initAdmin, openPinModal } from './admin.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -37,10 +38,16 @@ function wireCardClicks() {
   });
 }
 
+function wireEditEntry() {
+  $('tagline').addEventListener('click', openPinModal);
+}
+
 async function boot() {
   initLightbox();
+  initAdmin();
   wireCategoryClicks();
   wireCardClicks();
+  wireEditEntry();
   try {
     const data = await fetchCatalog();
     state.items = data.items;
