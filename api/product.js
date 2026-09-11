@@ -14,6 +14,6 @@ export default async function handler(req, res) {
   const item = catalog.items.find((it) => it.id === id);
   if (!item) return res.status(200).send(html);
 
-  const url = `https://${req.headers.host}/?item=${encodeURIComponent(id)}`;
+  const url = `https://${req.headers.host}/p/${encodeURIComponent(id)}`;
   res.status(200).send(injectOgTags(html, item, url));
 }

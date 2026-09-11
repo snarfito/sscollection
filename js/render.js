@@ -2,10 +2,10 @@ import { formatCOP } from './format.js';
 import { CATEGORIES } from '../shared/categories.js';
 
 const ICONS = {
-  Dama: 'assets/ic-dama.png',
-  Caballero: 'assets/ic-caballero.png',
-  Zapatos: 'assets/ic-zapatos.png',
-  Bolsos: 'assets/ic-bolsos.png',
+  Dama: '/assets/ic-dama.png',
+  Caballero: '/assets/ic-caballero.png',
+  Zapatos: '/assets/ic-zapatos.png',
+  Bolsos: '/assets/ic-bolsos.png',
 };
 
 export function buildCategoryRowHTML(activeCat) {

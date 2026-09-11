@@ -5,7 +5,7 @@ import { toast } from './toast.js';
 const $ = (id) => document.getElementById(id);
 
 function itemUrl(item) {
-  return `${location.origin}${location.pathname}?item=${encodeURIComponent(item.id)}`;
+  return `${location.origin}/p/${encodeURIComponent(item.id)}`;
 }
 
 async function shareItem(item) {
@@ -38,7 +38,7 @@ export function openLightbox(item, whatsappNumber) {
 
 export function closeLightbox() {
   $('lightboxOverlay').hidden = true;
-  history.replaceState(null, '', location.pathname);
+  history.replaceState(null, '', '/');
 }
 
 export function initLightbox() {

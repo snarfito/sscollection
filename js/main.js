@@ -59,8 +59,8 @@ async function boot() {
     $('gridWrap').innerHTML = '<div class="empty">No se pudo cargar el catálogo</div>';
   }
   notify();
-  const sharedId = new URLSearchParams(location.search).get('item');
-  const sharedItem = sharedId && state.items.find((it) => it.id === sharedId);
+  const sharedId = location.pathname.match(/^\/p\/(.+)$/)?.[1];
+  const sharedItem = sharedId && state.items.find((it) => it.id === decodeURIComponent(sharedId));
   if (sharedItem) openLightbox(sharedItem, state.whatsapp);
 }
 
