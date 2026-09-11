@@ -110,15 +110,19 @@ function closeAddModal() {
   $('addOverlay').hidden = true;
 }
 
-async function onPhotoChosen(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
+async function handleAddPhotoFile(file) {
   if (!file) return;
   const blob = await openCropper(file);
   if (!blob) return;
   addState.photoBlob = blob;
   $('dropzoneText').textContent = 'Foto elegida ✓';
   renderAddModal();
+}
+
+async function onPhotoChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  await handleAddPhotoFile(file);
 }
 
 async function publishItem() {
@@ -174,15 +178,37 @@ function closeEditModal() {
   $('editItemOverlay').hidden = true;
 }
 
-async function onEditPhotoChosen(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
+async function handleEditPhotoFile(file) {
   if (!file) return;
   const blob = await openCropper(file);
   if (!blob) return;
   editState.photoBlob = blob;
   $('editPhotoPreview').src = URL.createObjectURL(editState.photoBlob);
   $('editDropzoneText').textContent = 'Nueva foto elegida ✓';
+}
+
+async function onEditPhotoChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  await handleEditPhotoFile(file);
+}
+
+function wireDropzone(el, handler) {
+  el.addEventListener('dragover', (e) => e.preventDefault());
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handler(file);
+  });
+}
+
+function onPaste(e) {
+  const file = [...(e.clipboardData?.items || [])]
+    .find((it) => it.type.startsWith('image/'))
+    ?.getAsFile();
+  if (!file) return;
+  if (!$('editItemOverlay').hidden) handleEditPhotoFile(file);
+  else if (!$('addOverlay').hidden) handleAddPhotoFile(file);
 }
 
 async function saveEditItem() {
@@ -260,6 +286,7 @@ export function initAdmin() {
   $('addBtn').addEventListener('click', openAddModal);
   $('addCancelBtn').addEventListener('click', closeAddModal);
   $('photoInput').addEventListener('change', onPhotoChosen);
+  wireDropzone($('dropzone'), handleAddPhotoFile);
   $('catChips').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-cat]');
     if (!btn) return;
@@ -282,6 +309,8 @@ export function initAdmin() {
   $('publishBtn').addEventListener('click', publishItem);
 
   $('editPhotoInput').addEventListener('change', onEditPhotoChosen);
+  wireDropzone($('editDropzone'), handleEditPhotoFile);
+  document.addEventListener('paste', onPaste);
   $('editPriceInput').addEventListener('input', (e) => {
     editState.price = e.target.value;
     renderEditModal();
