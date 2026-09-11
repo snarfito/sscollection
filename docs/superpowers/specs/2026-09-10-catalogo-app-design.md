@@ -40,10 +40,13 @@ api/
 assets/                 logo.png, ic-dama.png, ic-caballero.png,
                         ic-zapatos.png, ic-bolsos.png (copied as-is
                         from design_handoff_catalogo/assets)
-package.json            @vercel/blob dependency
+package.json            @vercel/blob dependency, "type": "module"
 vercel.json             cleanUrls
 .gitignore              node_modules, .vercel, .env*.local
 README.md               env vars + local dev + deploy notes
+scripts/smoke.mjs       post-deploy check (kept out of test/ so
+                        `node --test` doesn't try to run it against
+                        nothing)
 ```
 
 No `settings` screen (rename shop / change PIN in-app) — not in the
@@ -109,7 +112,7 @@ from one device at a time. Upgrade path if that ever matters: move
 items to Vercel KV/Postgres with per-item writes.
 
 ## Testing / self-check
-No framework. One `test/smoke.mjs` (Node, `assert`-based) that hits the
+No framework. One `scripts/smoke.mjs` (Node, `assert`-based) that hits the
 deployed `/api/content` GET and confirms it returns `{items, whatsapp}`
 shape — the smallest thing that fails if the API contract breaks.
 Manual pass in the browser (mobile width) for: category filter,
