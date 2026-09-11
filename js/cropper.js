@@ -19,23 +19,36 @@ export function openCropper(file) {
       img.onload = () => {
         overlay.hidden = false;
         const rect = frame.getBoundingClientRect();
-        const minScale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-        let scale = minScale;
+        // coverScale fills the frame with no gaps (may crop the image);
+        // containScale shows the whole image, letterboxed if needed.
+        // Zooming out past coverScale down to containScale trades crop
+        // for visible background, for images that don't match the 3:4 frame.
+        const coverScale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+        const containScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+        const minScale = containScale;
+        const maxScale = coverScale * 3;
+        let scale = coverScale;
         let tx = (rect.width - img.naturalWidth * scale) / 2;
         let ty = (rect.height - img.naturalHeight * scale) / 2;
 
+        function clampAxis(pos, imgSize, frameSize) {
+          const lo = Math.min(0, frameSize - imgSize);
+          const hi = Math.max(0, frameSize - imgSize);
+          return Math.min(hi, Math.max(lo, pos));
+        }
+
         function apply() {
           const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
-          tx = Math.min(0, Math.max(rect.width - w, tx));
-          ty = Math.min(0, Math.max(rect.height - h, ty));
+          tx = clampAxis(tx, w, rect.width);
+          ty = clampAxis(ty, h, rect.height);
           img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
         }
 
-        zoom.value = '0';
+        zoom.value = String(((scale - minScale) / (maxScale - minScale)) * 100);
         zoom.oninput = () => {
           const cx = rect.width / 2, cy = rect.height / 2;
           const imgCx = (cx - tx) / scale, imgCy = (cy - ty) / scale;
-          scale = minScale * (1 + (Number(zoom.value) / 100) * 2);
+          scale = minScale + (Number(zoom.value) / 100) * (maxScale - minScale);
           tx = cx - imgCx * scale;
           ty = cy - imgCy * scale;
           apply();
@@ -82,7 +95,10 @@ export function openCropper(file) {
           const canvas = document.createElement('canvas');
           canvas.width = OUT_W;
           canvas.height = OUT_H;
-          canvas.getContext('2d').drawImage(
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff'; // fills any letterboxing left by zooming out past cover-fit
+          ctx.fillRect(0, 0, OUT_W, OUT_H);
+          ctx.drawImage(
             img,
             tx * k, ty * k,
             img.naturalWidth * scale * k, img.naturalHeight * scale * k
