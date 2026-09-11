@@ -36,14 +36,14 @@
 **Interfaces:**
 - Produces: `package.json` with `"type": "module"` (so both `api/*.js` and `test/*.js` can use ESM `import`/`export` under plain Node) and the `@vercel/blob` dependency; `npm test` runs `node --test`.
 
-- [ ] **Step 1: Copy the design assets into the app's asset folder**
+- [x] **Step 1: Copy the design assets into the app's asset folder**
 
 ```bash
 mkdir -p assets
 cp design_handoff_catalogo/assets/logo.png design_handoff_catalogo/assets/ic-dama.png design_handoff_catalogo/assets/ic-caballero.png design_handoff_catalogo/assets/ic-zapatos.png design_handoff_catalogo/assets/ic-bolsos.png assets/
 ```
 
-- [ ] **Step 2: Create `package.json`**
+- [x] **Step 2: Create `package.json`**
 
 ```json
 {
@@ -70,7 +70,7 @@ vulnerable `undici`; `2.8.0` exports the same `put`/`list`/`del` API.
 list; see Task 8's `Storage revision` note for why Blob alone wasn't
 enough.)
 
-- [ ] **Step 3: Create `vercel.json`**
+- [x] **Step 3: Create `vercel.json`**
 
 ```json
 {
@@ -84,7 +84,7 @@ and no real build step — without it, Vercel expects build output in a
 `public/` folder and `vercel dev` fails with "No Output Directory named
 'public' found".)
 
-- [ ] **Step 4: Create `README.md`**
+- [x] **Step 4: Create `README.md`**
 
 ```markdown
 # S&S Collection — Catálogo Digital
@@ -123,12 +123,12 @@ Vercel project is Git-connected and deploys automatically.
     npm run smoke -- https://<deployment-url>
 ```
 
-- [ ] **Step 5: Install the dependency**
+- [x] **Step 5: Install the dependency**
 
 Run: `npm install`
 Expected: creates `node_modules/` and `package-lock.json`, no errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json vercel.json README.md assets .gitignore
@@ -156,7 +156,7 @@ whole app depends on. Every later task's manual verification (`vercel dev`
   `.env.local` (gitignored) with those values plus `BLOB_READ_WRITE_TOKEN`
   for `vercel dev`.
 
-- [ ] **Step 1: Push the current commits to GitHub**
+- [x] **Step 1: Push the current commits to GitHub**
 
 ```bash
 git push -u origin main
@@ -167,19 +167,19 @@ empty repo at `https://github.com/new` named `sscollection` under
 `snarfito` (no README/license/gitignore — this repo already has its own),
 then re-run the push.
 
-- [ ] **Step 2: Bootstrap the Vercel project**
+- [x] **Step 2: Bootstrap the Vercel project**
 
 Use the `vercel:bootstrap` skill to link this directory to a new Vercel
 project named `sscollection` on the `snarfito` team, connected to the
 GitHub repo pushed in Step 1.
 
-- [ ] **Step 3: Add a Blob store**
+- [x] **Step 3: Add a Blob store**
 
 Use the `vercel:vercel-storage` guidance (or the Storage tab in the Vercel
 dashboard) to create a Blob store and attach it to the `sscollection`
 project. This sets `BLOB_READ_WRITE_TOKEN` on the project automatically.
 
-- [ ] **Step 4: Set the two application env vars**
+- [x] **Step 4: Set the two application env vars**
 
 Use the `vercel:env` skill to add, on the `sscollection` project (all
 environments):
@@ -188,7 +188,7 @@ environments):
   (ask the user for the real number if it hasn't been provided yet; do not
   invent one)
 
-- [ ] **Step 5: Pull env vars locally and verify `vercel dev` boots**
+- [x] **Step 5: Pull env vars locally and verify `vercel dev` boots**
 
 ```bash
 vercel env pull .env.local
@@ -215,7 +215,7 @@ itself.
 - Produces: `CATEGORIES` (array of 4 strings), `isValidCategory(value)` —
   consumed by `api/_lib/validate.js`, `js/render.js`, `js/admin.js`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/categories.test.js
@@ -236,12 +236,12 @@ test('isValidCategory rejects an unknown category', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/categories.test.js`
 Expected: FAIL — `Cannot find module '../shared/categories.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // shared/categories.js
@@ -252,12 +252,12 @@ export function isValidCategory(value) {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/categories.test.js`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add shared/categories.js test/categories.test.js
@@ -282,7 +282,7 @@ EOF
 - Produces: `formatCOP(amount)` → string, e.g. `"$120.000"` — consumed by
   `js/render.js`, `js/lightbox.js`, `js/admin.js`, `js/whatsapp.js`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/format.test.js
@@ -303,12 +303,12 @@ test('formats zero', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/format.test.js`
 Expected: FAIL — `Cannot find module '../js/format.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // js/format.js
@@ -318,12 +318,12 @@ export function formatCOP(amount) {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/format.test.js`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/format.js test/format.test.js
@@ -349,7 +349,7 @@ EOF
 - Produces: `buildWhatsAppLink(number, item)` → string URL — consumed by
   `js/lightbox.js`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/whatsapp.test.js
@@ -370,12 +370,12 @@ test('encodes a message mentioning the category and formatted price', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/whatsapp.test.js`
 Expected: FAIL — `Cannot find module '../js/whatsapp.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // js/whatsapp.js
@@ -387,12 +387,12 @@ export function buildWhatsAppLink(number, item) {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/whatsapp.test.js`
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/whatsapp.js test/whatsapp.test.js
@@ -419,7 +419,7 @@ EOF
   PIN doesn't match) — consumed by `api/content.js`, `api/upload.js`,
   `api/delete.js`, `api/verify-pin.js` (Tasks 8–11).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/auth.test.js
@@ -441,12 +441,12 @@ test('rejects when either side is missing', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/auth.test.js`
 Expected: FAIL — `Cannot find module '../api/_lib/auth.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // api/_lib/auth.js
@@ -465,12 +465,12 @@ export function requireAdmin(req, res) {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/auth.test.js`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/_lib/auth.js test/auth.test.js
@@ -496,7 +496,7 @@ EOF
 - Produces: `validateItem(item)` → boolean; `validateItemsPayload(payload)`
   → boolean — consumed by `api/content.js` (Task 8).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/validate.test.js
@@ -529,12 +529,12 @@ test('validates a full payload', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/validate.test.js`
 Expected: FAIL — `Cannot find module '../api/_lib/validate.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // api/_lib/validate.js
@@ -555,12 +555,12 @@ export function validateItemsPayload(payload) {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/validate.test.js`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/_lib/validate.js test/validate.test.js
@@ -605,7 +605,7 @@ don't change after upload, so Blob's caching is harmless there.
   called by `js/admin.js`, Task 17/18, with the full list it already
   holds in memory — avoiding a server-side read entirely).
 
-- [ ] **Step 1: Provision Redis and set env vars**
+- [x] **Step 1: Provision Redis and set env vars**
 
 Create a Redis database at [upstash.com](https://upstash.com) (own
 account, free tier). From its REST API section, get
@@ -621,7 +621,7 @@ done
 vercel env pull .env.local
 ```
 
-- [ ] **Step 2: Implement the Redis-backed store**
+- [x] **Step 2: Implement the Redis-backed store**
 
 ```javascript
 // api/_lib/catalog.js
@@ -651,7 +651,7 @@ export async function writeCatalog(catalog) {
 }
 ```
 
-- [ ] **Step 3: Implement the content handler**
+- [x] **Step 3: Implement the content handler**
 
 ```javascript
 // api/content.js
@@ -688,7 +688,7 @@ into `req.body` regardless of the legacy `bodyParser` config, both under
 `vercel dev` and in production. `validateItemsPayload` already rejects
 `undefined`/malformed bodies with a clean `400`.)
 
-- [ ] **Step 4: Manually verify against `vercel dev`**
+- [x] **Step 4: Manually verify against `vercel dev`**
 
 ```bash
 vercel dev --listen 3000 &
@@ -719,7 +719,7 @@ curl -s -X PUT http://localhost:3000/api/content \
 kill %1
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/_lib/catalog.js api/content.js
@@ -744,7 +744,7 @@ EOF
 - Produces: `POST /api/verify-pin` → `200 {ok:true}` / `401` — consumed by
   `js/admin.js` (Task 16).
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```javascript
 // api/verify-pin.js
@@ -757,7 +757,7 @@ export default function handler(req, res) {
 }
 ```
 
-- [ ] **Step 2: Manually verify against `vercel dev`**
+- [x] **Step 2: Manually verify against `vercel dev`**
 
 ```bash
 vercel dev --listen 3000 &
@@ -774,7 +774,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:3000/api/verif
 kill %1
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add api/verify-pin.js
@@ -799,7 +799,7 @@ EOF
 - Produces: `POST /api/upload?id=<id>` → `200 {url}` / `401`/`400` —
   consumed by `js/api-client.js` (Task 14).
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```javascript
 // api/upload.js
@@ -840,7 +840,7 @@ the photo with `Content-Type: application/octet-stream` — `js/api-client.js`
 (Task 14) does this — while the Blob object itself is still stored with
 `contentType: 'image/jpeg'`.)
 
-- [ ] **Step 2: Manually verify against `vercel dev`**
+- [x] **Step 2: Manually verify against `vercel dev`**
 
 ```bash
 vercel dev --listen 3000 &
@@ -860,7 +860,7 @@ kill %1
 vercel blob del "photos/it_manualtest.jpg" --yes
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add api/upload.js
@@ -892,7 +892,7 @@ the remaining list directly via `PUT /api/content`, which is both
 simpler and avoids a server-side read of a resource the caller already
 knows the intended end-state of.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 ```javascript
 // api/delete.js
@@ -919,7 +919,7 @@ export default async function handler(req, res) {
 }
 ```
 
-- [ ] **Step 2: Manually verify against `vercel dev`**
+- [x] **Step 2: Manually verify against `vercel dev`**
 
 ```bash
 vercel dev --listen 3000 &
@@ -944,7 +944,7 @@ curl -s http://localhost:3000/api/content
 kill %1
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add api/delete.js
@@ -969,7 +969,7 @@ JS). Verified visually, side by side with
 - Create: `index.html`
 - Create: `styles.css`
 
-- [ ] **Step 1: Create `styles.css`**
+- [x] **Step 1: Create `styles.css`**
 
 ```css
 :root{
@@ -1105,7 +1105,7 @@ img{max-width:100%;display:block;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
 ```
 
-- [ ] **Step 2: Create `index.html`**
+- [x] **Step 2: Create `index.html`**
 
 ```html
 <!DOCTYPE html>
@@ -1206,7 +1206,7 @@ img{max-width:100%;display:block;}
 </html>
 ```
 
-- [ ] **Step 3: Manually verify visual parity**
+- [x] **Step 3: Manually verify visual parity**
 
 ```bash
 vercel dev --listen 3000 &
@@ -1221,7 +1221,7 @@ past 900px and compare against the reference's desktop section. The grid
 will show no cards yet (`#gridWrap` is empty until Task 15) — that's
 expected. `kill %1` when done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add index.html styles.css
@@ -1251,7 +1251,7 @@ EOF
   `getVisibleItems(items, activeCat)`, `buildGridHTML(items, activeCat,
   editMode, selectedIds)` — consumed by `js/main.js` (Task 15).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/render.test.js
@@ -1289,12 +1289,12 @@ test('buildGridHTML renders a select circle only in edit mode', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/render.test.js`
 Expected: FAIL — `Cannot find module '../js/render.js'`
 
-- [ ] **Step 3: Implement `js/state.js`**
+- [x] **Step 3: Implement `js/state.js`**
 
 ```javascript
 // js/state.js
@@ -1317,7 +1317,7 @@ export function notify() {
 }
 ```
 
-- [ ] **Step 4: Implement `js/render.js`**
+- [x] **Step 4: Implement `js/render.js`**
 
 ```javascript
 // js/render.js
@@ -1368,12 +1368,12 @@ function buildCardHTML(item, editMode, selectedIds) {
 }
 ```
 
-- [ ] **Step 5: Run to verify it passes**
+- [x] **Step 5: Run to verify it passes**
 
 Run: `node --test test/render.test.js`
 Expected: PASS (5 tests)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/state.js js/render.js test/render.test.js
@@ -1401,7 +1401,7 @@ EOF
   `.status` property on non-2xx), `getCachedPin()`, `setCachedPin(pin)`,
   `clearCachedPin()` — consumed by `js/admin.js` (Tasks 16–18).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // test/api-client.test.js
@@ -1426,12 +1426,12 @@ test('saveItems rejects with the response status when the request fails', async 
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `node --test test/api-client.test.js`
 Expected: FAIL — `Cannot find module '../js/api-client.js'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```javascript
 // js/api-client.js
@@ -1493,14 +1493,14 @@ export function clearCachedPin() {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `node --test test/api-client.test.js`
 Expected: PASS (2 tests) — `getCachedPin`/`setCachedPin` aren't exercised
 here since `sessionStorage` doesn't exist under plain Node; their
 try/catch is verified manually in the browser in Task 16.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/api-client.js test/api-client.test.js
@@ -1534,7 +1534,7 @@ that doesn't exist as behavior yet — that's next).
   `closeLightbox()` — consumed by `js/main.js` and, later, nothing else.
   `js/main.js` has no exports; it boots the app.
 
-- [ ] **Step 1: Implement `js/lightbox.js`**
+- [x] **Step 1: Implement `js/lightbox.js`**
 
 ```javascript
 // js/lightbox.js
@@ -1561,7 +1561,7 @@ export function initLightbox() {
 }
 ```
 
-- [ ] **Step 2: Implement `js/main.js` (edit-mode hooks are stubbed with
+- [x] **Step 2: Implement `js/main.js` (edit-mode hooks are stubbed with
   no-ops for now — Task 16 replaces the stub)**
 
 ```javascript
@@ -1622,7 +1622,7 @@ async function boot() {
 boot();
 ```
 
-- [ ] **Step 3: Manually verify in the browser**
+- [x] **Step 3: Manually verify in the browser**
 
 ```bash
 vercel dev --listen 3000 &
@@ -1654,7 +1654,7 @@ curl -s -X PUT http://localhost:3000/api/content \
 kill %1
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add js/lightbox.js js/main.js
@@ -1685,7 +1685,7 @@ EOF
 - Produces: `initAdmin()`, `openPinModal()` — consumed by `js/main.js`.
   (`toggleSelect` is added in Task 18 but declared here isn't needed yet.)
 
-- [ ] **Step 1: Implement `js/admin.js`**
+- [x] **Step 1: Implement `js/admin.js`**
 
 ```javascript
 // js/admin.js
@@ -1767,7 +1767,7 @@ export function initAdmin() {
 }
 ```
 
-- [ ] **Step 2: Wire it into `js/main.js`**
+- [x] **Step 2: Wire it into `js/main.js`**
 
 ```javascript
 // js/main.js — add to the top imports
@@ -1800,7 +1800,7 @@ async function boot() {
 }
 ```
 
-- [ ] **Step 3: Manually verify in the browser**
+- [x] **Step 3: Manually verify in the browser**
 
 ```bash
 vercel dev --listen 3000 &
@@ -1820,7 +1820,7 @@ the PIN again (cached in `sessionStorage` — check via devtools →
 Application → Session Storage). Open a private/incognito window and
 confirm the PIN is asked again there. `kill %1` when done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add js/admin.js js/main.js
@@ -1847,7 +1847,7 @@ EOF
 - Produces: nothing new exported — `initAdmin()`'s signature is unchanged,
   it just wires more buttons.
 
-- [ ] **Step 1: Extend the imports at the top of `js/admin.js`**
+- [x] **Step 1: Extend the imports at the top of `js/admin.js`**
 
 ```javascript
 // js/admin.js — replace the existing import line
@@ -1857,7 +1857,7 @@ import { formatCOP } from './format.js';
 import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto } from './api-client.js';
 ```
 
-- [ ] **Step 2: Append the toast helper and add-flow logic to
+- [x] **Step 2: Append the toast helper and add-flow logic to
   `js/admin.js`**
 
 ```javascript
@@ -1970,7 +1970,7 @@ async function publishItem() {
 }
 ```
 
-- [ ] **Step 3: Wire the new buttons in `initAdmin()`**
+- [x] **Step 3: Wire the new buttons in `initAdmin()`**
 
 ```javascript
 // js/admin.js — inside initAdmin(), after the existing listeners
@@ -1999,7 +1999,7 @@ async function publishItem() {
   $('publishBtn').addEventListener('click', publishItem);
 ```
 
-- [ ] **Step 4: Manually verify in the browser**
+- [x] **Step 4: Manually verify in the browser**
 
 ```bash
 vercel dev --listen 3000 &
@@ -2023,7 +2023,7 @@ page and confirm the item persisted (fetched from `/api/content`, not
 just local state). `kill %1` when done; delete the test item via the
 delete flow once Task 18 lands, or with the curl command from Task 11.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/admin.js
@@ -2059,7 +2059,7 @@ was changed). `deleteItem` is still called per id afterward, but only
 to clean up the photo blob — fire-and-forget, since it's not on the
 critical path for what customers see.
 
-- [ ] **Step 1: Append to `js/admin.js`**
+- [x] **Step 1: Append to `js/admin.js`**
 
 ```javascript
 // js/admin.js — extend the api-client import to include deleteItem
@@ -2105,14 +2105,14 @@ async function deleteSelected() {
 }
 ```
 
-- [ ] **Step 2: Wire the delete button in `initAdmin()`**
+- [x] **Step 2: Wire the delete button in `initAdmin()`**
 
 ```javascript
 // js/admin.js — inside initAdmin(), after the add-flow listeners
   $('deleteBtn').addEventListener('click', deleteSelected);
 ```
 
-- [ ] **Step 3: Route card clicks to selection in `js/main.js`**
+- [x] **Step 3: Route card clicks to selection in `js/main.js`**
 
 ```javascript
 // js/main.js — add to the top imports
@@ -2135,7 +2135,7 @@ function wireCardClicks() {
 }
 ```
 
-- [ ] **Step 4: Manually verify in the browser**
+- [x] **Step 4: Manually verify in the browser**
 
 ```bash
 vercel dev --listen 3000 &
@@ -2154,7 +2154,7 @@ eliminada(s)" toast shows. Exit edit mode and reload the page: confirm
 the deleted items are really gone (not just hidden locally). `kill %1`
 when done.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/admin.js js/main.js
@@ -2178,7 +2178,7 @@ EOF
 - Produces: a standalone script, run as `node scripts/smoke.mjs
   <deployment-url>` — not imported by anything else.
 
-- [ ] **Step 1: Implement the smoke script**
+- [x] **Step 1: Implement the smoke script**
 
 ```javascript
 // scripts/smoke.mjs
@@ -2197,14 +2197,14 @@ assert.equal(typeof data.whatsapp, 'string', 'expected data.whatsapp to be a str
 console.log('OK: /api/content returned', data.items.length, 'item(s) and a whatsapp number');
 ```
 
-- [ ] **Step 2: Add the `smoke` script to `package.json`**
+- [x] **Step 2: Add the `smoke` script to `package.json`**
 
 ```json
 // package.json — add under "scripts"
     "smoke": "node scripts/smoke.mjs"
 ```
 
-- [ ] **Step 3: Push everything and let Vercel auto-deploy**
+- [x] **Step 3: Push everything and let Vercel auto-deploy**
 
 ```bash
 git add scripts/smoke.mjs package.json
@@ -2218,7 +2218,7 @@ EOF
 git push origin main
 ```
 
-- [ ] **Step 4: Confirm the deployment and run the smoke test against it**
+- [x] **Step 4: Confirm the deployment and run the smoke test against it**
 
 Use the `vercel:status` skill (or `vercel ls sscollection` / the Vercel
 dashboard) to find the production deployment URL once it finishes
@@ -2232,7 +2232,7 @@ Expected: `OK: /api/content returned 0 item(s) and a whatsapp number`
 (0 items unless real product photos have been added since Task 17/18's
 manual testing left the catalog empty).
 
-- [ ] **Step 5: Full manual pass on the production URL**
+- [x] **Step 5: Full manual pass on the production URL**
 
 Open the production URL on an actual phone (or a mobile-width browser
 window): confirm the header, category row, and empty-state message
