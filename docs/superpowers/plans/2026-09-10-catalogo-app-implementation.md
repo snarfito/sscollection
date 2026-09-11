@@ -605,14 +605,22 @@ export async function readCatalog() {
 // ponytail: read-modify-write on one JSON blob races if two admin
 // sessions save at once. Fine for one owner editing from one device;
 // move to Vercel KV/Postgres with per-item writes if that ever changes.
+// ponytail: read-modify-write on one JSON blob races if two admin
+// sessions save at once. Fine for one owner editing from one device;
+// move to Vercel KV/Postgres with per-item writes if that ever changes.
 export async function writeCatalog(catalog) {
   await put(CATALOG_PATH, JSON.stringify(catalog), {
     access: 'public',
     contentType: 'application/json',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 ```
+
+(`allowOverwrite: true` is required — the current `@vercel/blob` refuses to
+write to an existing pathname otherwise, and `writeCatalog` always writes
+to the same fixed `content/catalog.json`.)
 
 - [ ] **Step 2: Implement the content handler**
 
@@ -621,8 +629,6 @@ export async function writeCatalog(catalog) {
 import { readCatalog, writeCatalog } from './_lib/blob.js';
 import { requireAdmin } from './_lib/auth.js';
 import { validateItemsPayload } from './_lib/validate.js';
-
-export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -633,29 +639,24 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     if (!requireAdmin(req, res)) return;
-
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const buffer = Buffer.concat(chunks);
-
-    let payload;
-    try {
-      payload = JSON.parse(buffer.toString('utf-8'));
-    } catch {
-      return res.status(400).json({ error: 'JSON inválido' });
-    }
-
-    if (!validateItemsPayload(payload)) {
+    if (!validateItemsPayload(req.body)) {
       return res.status(400).json({ error: 'Formato inválido' });
     }
 
-    await writeCatalog({ items: payload.items });
+    await writeCatalog({ items: req.body.items });
     return res.status(200).json({ ok: true });
   }
 
   res.status(405).end();
 }
 ```
+
+(No `config.api.bodyParser = false` / manual stream reading — the Vercel
+Node runtime parses a `Content-Type: application/json` body into
+`req.body` regardless of that legacy config, both under `vercel dev` and
+in production, so reading the raw stream here just gets an empty buffer.
+`validateItemsPayload` already rejects `undefined`/malformed bodies with
+a clean `400`.)
 
 - [ ] **Step 3: Manually verify against `vercel dev`**
 
