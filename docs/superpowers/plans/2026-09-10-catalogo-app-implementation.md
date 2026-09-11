@@ -776,8 +776,6 @@ EOF
 import { put } from '@vercel/blob';
 import { requireAdmin } from './_lib/auth.js';
 
-export const config = { api: { bodyParser: false } };
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   if (!requireAdmin(req, res)) return;
@@ -787,20 +785,30 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'id inválido' });
   }
 
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const buffer = Buffer.concat(chunks);
-  if (buffer.length === 0) return res.status(400).json({ error: 'Sin contenido' });
+  if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+    return res.status(400).json({ error: 'Sin contenido' });
+  }
 
-  const blob = await put(`photos/${id}.jpg`, buffer, {
+  const blob = await put(`photos/${id}.jpg`, req.body, {
     access: 'public',
     contentType: 'image/jpeg',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 
   res.status(200).json({ url: blob.url });
 }
 ```
+
+(No manual stream reading here either. Vercel's Node runtime only
+auto-buffers a request body into `req.body` for content types it
+recognizes — `application/json`, `text/*`, `application/x-www-form-urlencoded`,
+`application/octet-stream` — as a `Buffer` for the last one. An
+unrecognized type like `image/jpeg` gets silently dropped: `req.body` is
+`undefined` AND the raw stream is already empty. So the client must send
+the photo with `Content-Type: application/octet-stream` — `js/api-client.js`
+(Task 14) does this — while the Blob object itself is still stored with
+`contentType: 'image/jpeg'`.)
 
 - [ ] **Step 2: Manually verify against `vercel dev`**
 
@@ -809,7 +817,7 @@ vercel dev --listen 3000 &
 sleep 3
 
 curl -s -X POST 'http://localhost:3000/api/upload?id=it_manualtest' \
-  -H 'x-admin-pin: 0722' -H 'Content-Type: image/jpeg' \
+  -H 'x-admin-pin: 0722' -H 'Content-Type: application/octet-stream' \
   --data-binary @design_handoff_catalogo/assets/ic-dama.png
 # Expected: {"url":"https://...blob.vercel-storage.com/photos/it_manualtest.jpg"}
 # Open the returned URL in a browser to confirm the image loads.
@@ -1421,7 +1429,10 @@ export function saveItems(items, pin) {
 export function uploadPhoto(id, blob, pin) {
   return request(`/api/upload?id=${encodeURIComponent(id)}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'image/jpeg', 'x-admin-pin': pin },
+    // application/octet-stream, not image/jpeg: Vercel's Node runtime
+    // only auto-buffers recognized content types into req.body; an
+    // unrecognized one like image/jpeg gets silently dropped (see Task 10).
+    headers: { 'Content-Type': 'application/octet-stream', 'x-admin-pin': pin },
     body: blob,
   });
 }
