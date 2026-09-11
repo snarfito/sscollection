@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>S&amp;S Collection — referencia de diseño</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#EDEAE2;font-family:Jost,sans-serif;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:40px}
+  .card{max-width:100%;background:#0B0B0C;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .label{font:600 12px system-ui,sans-serif;color:#555;margin-bottom:-20px}
+</style>
+</head>
+<body>
+
+<div class="label">MÓVIL — 390px</div>
+<div class="card" style="width:390px">
+  <div style="position:relative;overflow:hidden;padding:26px 18px 20px;text-align:center;border-bottom:1px solid #262119;background:radial-gradient(120% 95% at 6% -10%,rgba(232,196,104,.20),rgba(201,162,39,.05) 42%,transparent 68%),#0B0B0C">
+    <div style="position:absolute;top:26px;left:-72px;width:170px;height:1px;background:linear-gradient(90deg,transparent,#C9A227 45%,rgba(201,162,39,.15));transform:rotate(-45deg)"></div>
+    <div style="position:absolute;top:44px;left:-78px;width:150px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.55),transparent);transform:rotate(-45deg)"></div>
+    <div style="position:absolute;right:-70px;bottom:14px;width:150px;height:1px;background:linear-gradient(90deg,rgba(201,162,39,.15),#C9A227 55%,transparent);transform:rotate(-45deg)"></div>
+    <img src="assets/logo.png" alt="S&amp;S Collection" style="position:relative;height:66px;width:auto;display:block;margin:0 auto;filter:drop-shadow(0 6px 22px rgba(201,162,39,.28))">
+    <div style="position:relative;font:italic 500 12.5px 'Playfair Display',serif;color:#E8C468;margin-top:8px">Tu estilo, nuestra pasión</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #262119;background:linear-gradient(180deg,rgba(201,162,39,.05),transparent)">
+    <div style="padding:12px 4px 10px;text-align:center;border-right:1px solid #201B15"><img src="assets/ic-dama.png" style="height:26px;margin:0 auto 6px;display:block"><div style="font:400 8.5px Jost;letter-spacing:.12em;text-transform:uppercase;color:#F3EAD8">Dama</div></div>
+    <div style="padding:12px 4px 10px;text-align:center;border-right:1px solid #201B15"><img src="assets/ic-caballero.png" style="height:26px;margin:0 auto 6px;display:block"><div style="font:400 8.5px Jost;letter-spacing:.12em;text-transform:uppercase;color:#F3EAD8">Caballero</div></div>
+    <div style="padding:12px 4px 10px;text-align:center;border-right:1px solid #201B15"><img src="assets/ic-zapatos.png" style="height:26px;margin:0 auto 6px;display:block"><div style="font:400 8.5px Jost;letter-spacing:.12em;text-transform:uppercase;color:#F3EAD8">Zapatos</div></div>
+    <div style="padding:12px 4px 10px;text-align:center"><img src="assets/ic-bolsos.png" style="height:26px;margin:0 auto 6px;display:block"><div style="font:400 8.5px Jost;letter-spacing:.12em;text-transform:uppercase;color:#F3EAD8">Bolsos</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px 14px;padding:22px 18px">
+    <div style="position:relative"><div style="aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px);border:1px solid #2A241B"></div><div style="position:absolute;left:-5px;bottom:12px;padding:6px 12px 6px 15px;background:linear-gradient(135deg,#E8C468,#C9A227);color:#141110;font:600 14px 'Playfair Display',serif;clip-path:polygon(11px 0,100% 0,100% 100%,11px 100%,0 50%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))">$120.000</div></div>
+    <div style="position:relative"><div style="aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px);border:1px solid #2A241B"></div><div style="position:absolute;left:-5px;bottom:12px;padding:6px 12px 6px 15px;background:linear-gradient(135deg,#E8C468,#C9A227);color:#141110;font:600 14px 'Playfair Display',serif;clip-path:polygon(11px 0,100% 0,100% 100%,11px 100%,0 50%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))">$85.000</div></div>
+    <div style="position:relative"><div style="aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px);border:1px solid #2A241B"></div><div style="position:absolute;left:-5px;bottom:12px;padding:6px 12px 6px 15px;background:linear-gradient(135deg,#E8C468,#C9A227);color:#141110;font:600 14px 'Playfair Display',serif;clip-path:polygon(11px 0,100% 0,100% 100%,11px 100%,0 50%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))">$210.000</div></div>
+    <div style="position:relative"><div style="aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px);border:1px solid #2A241B"></div><div style="position:absolute;left:-5px;bottom:12px;padding:6px 12px 6px 15px;background:linear-gradient(135deg,#E8C468,#C9A227);color:#141110;font:600 14px 'Playfair Display',serif;clip-path:polygon(11px 0,100% 0,100% 100%,11px 100%,0 50%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))">$95.000</div></div>
+  </div>
+</div>
+
+<div style="text-align:center;max-width:390px">
+  <div style="font:italic 500 15px 'Playfair Display',serif;color:#7A5F17;margin-bottom:4px">Lightbox (al tocar una prenda)</div>
+</div>
+<div class="card" style="width:390px;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;background:#0B0B0C">
+  <div style="width:220px;aspect-ratio:3/4;border:1px solid #2A241B;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px)"></div>
+  <div style="display:flex;align-items:center;gap:18px">
+    <span style="font:600 24px 'Playfair Display',serif;color:#E8C468">$120.000</span>
+    <span style="padding:11px 20px;border-radius:24px;background:#C9A227;color:#0B0B0C;font:600 13px Jost;letter-spacing:.04em">Pedir por WhatsApp</span>
+  </div>
+</div>
+
+<div class="label">ESCRITORIO — 1080px+</div>
+<div class="card" style="width:100%;max-width:1080px">
+  <div style="position:relative;overflow:hidden;padding:56px 40px 40px;text-align:center;background:radial-gradient(90% 130% at 4% -20%,rgba(232,196,104,.22),rgba(201,162,39,.06) 38%,transparent 62%),#0B0B0C">
+    <div style="position:absolute;top:64px;left:-120px;width:330px;height:1.5px;background:linear-gradient(90deg,transparent,#E8C468 50%,rgba(201,162,39,.1));transform:rotate(-45deg)"></div>
+    <div style="position:absolute;top:96px;left:-130px;width:300px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.5),transparent);transform:rotate(-45deg)"></div>
+    <div style="position:absolute;right:-120px;bottom:30px;width:300px;height:1.5px;background:linear-gradient(90deg,rgba(201,162,39,.1),#C9A227 50%,transparent);transform:rotate(-45deg)"></div>
+    <div style="position:absolute;right:-130px;bottom:62px;width:270px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.45),transparent);transform:rotate(-45deg)"></div>
+    <img src="assets/logo.png" alt="S&amp;S Collection" style="position:relative;height:120px;width:auto;display:block;margin:0 auto;filter:drop-shadow(0 10px 40px rgba(201,162,39,.3))">
+    <div style="position:relative;font:italic 500 16px 'Playfair Display',serif;color:#E8C468;margin-top:10px">Tu estilo, nuestra pasión</div>
+  </div>
+  <div style="display:flex;justify-content:center;border-top:1px solid #262119;border-bottom:1px solid #262119;background:linear-gradient(180deg,rgba(201,162,39,.06),transparent);flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 34px;border-right:1px solid #201B15"><img src="assets/ic-dama.png" style="height:28px"><span style="font:400 11px Jost;letter-spacing:.18em;text-transform:uppercase;color:#F3EAD8">Dama</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 34px;border-right:1px solid #201B15"><img src="assets/ic-caballero.png" style="height:28px"><span style="font:400 11px Jost;letter-spacing:.18em;text-transform:uppercase;color:#F3EAD8">Caballero</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 34px;border-right:1px solid #201B15"><img src="assets/ic-zapatos.png" style="height:28px"><span style="font:400 11px Jost;letter-spacing:.18em;text-transform:uppercase;color:#F3EAD8">Zapatos</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 34px"><img src="assets/ic-bolsos.png" style="height:28px"><span style="font:400 11px Jost;letter-spacing:.18em;text-transform:uppercase;color:#F3EAD8">Bolsos</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:34px 26px;padding:34px 40px 44px">
+    <div><div style="position:relative;aspect-ratio:3/4;border:1px solid #2A241B;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px)"><div style="position:absolute;top:-1px;left:-1px;width:34px;height:34px;border-top:1px solid rgba(201,162,39,.55);border-left:1px solid rgba(201,162,39,.55)"></div></div><div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:11px;padding-bottom:10px;border-bottom:1px solid #262119"><span style="font:500 17px 'Playfair Display',serif;color:#E8C468">$120.000</span><span style="font:400 9px Jost;letter-spacing:.16em;text-transform:uppercase;color:rgba(243,234,216,.42)">Dama</span></div></div>
+    <div><div style="position:relative;aspect-ratio:3/4;border:1px solid #2A241B;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px)"><div style="position:absolute;top:-1px;left:-1px;width:34px;height:34px;border-top:1px solid rgba(201,162,39,.55);border-left:1px solid rgba(201,162,39,.55)"></div></div><div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:11px;padding-bottom:10px;border-bottom:1px solid #262119"><span style="font:500 17px 'Playfair Display',serif;color:#E8C468">$85.000</span><span style="font:400 9px Jost;letter-spacing:.16em;text-transform:uppercase;color:rgba(243,234,216,.42)">Caballero</span></div></div>
+    <div><div style="position:relative;aspect-ratio:3/4;border:1px solid #2A241B;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px)"><div style="position:absolute;top:-1px;left:-1px;width:34px;height:34px;border-top:1px solid rgba(201,162,39,.55);border-left:1px solid rgba(201,162,39,.55)"></div></div><div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:11px;padding-bottom:10px;border-bottom:1px solid #262119"><span style="font:500 17px 'Playfair Display',serif;color:#E8C468">$210.000</span><span style="font:400 9px Jost;letter-spacing:.16em;text-transform:uppercase;color:rgba(243,234,216,.42)">Zapatos</span></div></div>
+    <div><div style="position:relative;aspect-ratio:3/4;border:1px solid #2A241B;background:#151311;background-image:repeating-linear-gradient(135deg,rgba(201,162,39,.10) 0 5px,transparent 5px 11px)"><div style="position:absolute;top:-1px;left:-1px;width:34px;height:34px;border-top:1px solid rgba(201,162,39,.55);border-left:1px solid rgba(201,162,39,.55)"></div></div><div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:11px;padding-bottom:10px;border-bottom:1px solid #262119"><span style="font:500 17px 'Playfair Display',serif;color:#E8C468">$95.000</span><span style="font:400 9px Jost;letter-spacing:.16em;text-transform:uppercase;color:rgba(243,234,216,.42)">Bolsos</span></div></div>
+  </div>
+</div>
+
+</body>
+</html>
