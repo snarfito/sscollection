@@ -65,7 +65,6 @@ async function onKeypadPress(key) {
 
 function exitEditMode() {
   state.editMode = false;
-  state.selectedIds = [];
   notify();
 }
 
@@ -168,32 +167,91 @@ async function publishItem() {
   }
 }
 
-export function toggleSelect(id) {
-  const idx = state.selectedIds.indexOf(id);
-  if (idx === -1) state.selectedIds.push(id);
-  else state.selectedIds.splice(idx, 1);
-  notify();
+/* ---- Edit item flow ---- */
+const editState = { item: null, photoBlob: null, price: '', hidden: false };
+
+function renderEditModal() {
+  $('editHideBtn').textContent = editState.hidden ? 'Mostrar prenda' : 'Ocultar prenda';
+  $('editHideBtn').classList.toggle('active', editState.hidden);
+  $('editSaveBtn').disabled = !(editState.price && Number(editState.price) > 0);
 }
 
-async function deleteSelected() {
+export function openEditItemModal(item) {
+  editState.item = item;
+  editState.photoBlob = null;
+  editState.price = String(item.price);
+  editState.hidden = !!item.hidden;
+  $('editPhotoInput').value = '';
+  $('editPhotoPreview').src = item.image;
+  $('editDropzoneText').textContent = 'Toca para cambiar la foto';
+  $('editPriceInput').value = item.price;
+  renderEditModal();
+  $('editItemOverlay').hidden = false;
+}
+
+function closeEditModal() {
+  $('editItemOverlay').hidden = true;
+}
+
+async function onEditPhotoChosen(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  editState.photoBlob = await resizeImageFile(file);
+  $('editPhotoPreview').src = URL.createObjectURL(editState.photoBlob);
+  $('editDropzoneText').textContent = 'Nueva foto elegida ✓';
+}
+
+async function saveEditItem() {
   const pin = getCachedPin();
-  const ids = [...state.selectedIds];
-  if (ids.length === 0) return;
-  $('deleteBtn').disabled = true;
+  $('editSaveBtn').disabled = true;
+  $('editSaveBtn').textContent = 'Guardando…';
   try {
-    // Compute the remaining list from what's already in memory and send
-    // it as one write, instead of one server-side read-modify-write per
-    // id — see api/delete.js for why. Photo cleanup can happen after,
-    // best-effort, since it doesn't affect what customers see.
-    const remaining = state.items.filter((it) => !ids.includes(it.id));
+    let image = editState.item.image;
+    if (editState.photoBlob) {
+      // A fresh path per replacement, not an overwrite of the existing one:
+      // Blob's CDN can serve a stale edge-cached response right after an
+      // overwrite, and the browser then caches that stale response for
+      // good under the "new" URL. A new path is always a cache miss.
+      // api/delete.js cleans up every "photos/<id>*" blob on item delete,
+      // so old versions still get swept up.
+      const photoId = `${editState.item.id}-${Date.now()}`;
+      const { url } = await uploadPhoto(photoId, editState.photoBlob, pin);
+      image = url;
+    }
+    const items = state.items.map((it) =>
+      it.id === editState.item.id ? { ...it, price: Number(editState.price), hidden: editState.hidden, image } : it
+    );
+    await saveItems(items, pin);
+    state.items = items;
+    closeEditModal();
+    notify();
+    toast('Cambios guardados');
+  } catch (err) {
+    if (err.status === 401) {
+      clearCachedPin();
+      exitEditMode();
+      toast('Tu clave expiró, ingresa de nuevo');
+    } else {
+      toast('No se pudo guardar. Intenta de nuevo.');
+    }
+  } finally {
+    $('editSaveBtn').disabled = false;
+    $('editSaveBtn').textContent = 'Guardar cambios';
+  }
+}
+
+async function deleteEditItem() {
+  const pin = getCachedPin();
+  const id = editState.item.id;
+  $('editDeleteBtn').disabled = true;
+  try {
+    const remaining = state.items.filter((it) => it.id !== id);
     await saveItems(remaining, pin);
     state.items = remaining;
-    state.selectedIds = [];
+    closeEditModal();
     notify();
-    toast('Prenda(s) eliminada(s)');
-    for (const id of ids) {
-      deleteItem(id, pin).catch(() => {});
-    }
+    toast('Prenda eliminada');
+    deleteItem(id, pin).catch(() => {});
   } catch (err) {
     if (err.status === 401) {
       clearCachedPin();
@@ -203,7 +261,7 @@ async function deleteSelected() {
       toast('No se pudo eliminar. Intenta de nuevo.');
     }
   } finally {
-    $('deleteBtn').disabled = false;
+    $('editDeleteBtn').disabled = false;
   }
 }
 
@@ -239,5 +297,16 @@ export function initAdmin() {
   });
   $('publishBtn').addEventListener('click', publishItem);
 
-  $('deleteBtn').addEventListener('click', deleteSelected);
+  $('editPhotoInput').addEventListener('change', onEditPhotoChosen);
+  $('editPriceInput').addEventListener('input', (e) => {
+    editState.price = e.target.value;
+    renderEditModal();
+  });
+  $('editHideBtn').addEventListener('click', () => {
+    editState.hidden = !editState.hidden;
+    renderEditModal();
+  });
+  $('editSaveBtn').addEventListener('click', saveEditItem);
+  $('editDeleteBtn').addEventListener('click', deleteEditItem);
+  $('editCancelBtn').addEventListener('click', closeEditModal);
 }

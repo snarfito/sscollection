@@ -16,26 +16,26 @@ export function buildCategoryRowHTML(activeCat) {
     </button>`).join('');
 }
 
-export function getVisibleItems(items, activeCat) {
-  return activeCat ? items.filter((it) => it.category === activeCat) : items;
+export function getVisibleItems(items, activeCat, editMode) {
+  const visible = activeCat ? items.filter((it) => it.category === activeCat) : items;
+  return editMode ? visible : visible.filter((it) => !it.hidden);
 }
 
-export function buildGridHTML(items, activeCat, editMode, selectedIds) {
-  const visible = getVisibleItems(items, activeCat);
+export function buildGridHTML(items, activeCat, editMode) {
+  const visible = getVisibleItems(items, activeCat, editMode);
   if (visible.length === 0) {
     return `<div class="empty">${editMode ? 'Aún no hay prendas aquí' : 'Muy pronto, nuevas piezas'}</div>`;
   }
-  return `<div class="grid">${visible.map((it) => buildCardHTML(it, editMode, selectedIds)).join('')}</div>`;
+  return `<div class="grid">${visible.map((it) => buildCardHTML(it, editMode)).join('')}</div>`;
 }
 
-function buildCardHTML(item, editMode, selectedIds) {
-  const selected = !!(selectedIds && selectedIds.includes(item.id));
+function buildCardHTML(item, editMode) {
   return `
     <div class="card" data-id="${item.id}">
-      ${editMode ? `<button type="button" class="select-circle${selected ? ' selected' : ''}" data-select="${item.id}" aria-label="Seleccionar">${selected ? '✓' : ''}</button>` : ''}
-      <div class="photo${selected ? ' dimmed' : ''}">
+      <div class="photo${item.hidden ? ' dimmed' : ''}">
         <img src="${item.image}" alt="${item.category} ${formatCOP(item.price)}" loading="lazy">
         <div class="corner-accent"></div>
+        ${editMode && item.hidden ? '<span class="hidden-badge">Oculto</span>' : ''}
       </div>
       <div class="price-row">
         <span class="tag">${formatCOP(item.price)}</span>

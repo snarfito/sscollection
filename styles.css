@@ -74,15 +74,13 @@ img{max-width:100%;display:block;}
 }
 
 /* Edit mode */
-.select-circle{position:absolute;top:8px;left:8px;z-index:2;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--gold-light);background:transparent;color:var(--ink);font-size:12px;line-height:1;padding:0;}
-.select-circle.selected{background:var(--gold-light);}
+.hidden-badge{position:absolute;top:8px;left:8px;z-index:2;padding:4px 9px;border-radius:20px;background:rgba(6,6,7,.75);border:1px solid var(--gold-light);color:var(--gold-light);font:600 10px 'Jost',sans-serif;letter-spacing:.06em;text-transform:uppercase;}
 
 .edit-bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:linear-gradient(135deg,var(--gold-light),var(--gold));color:var(--ink);font:500 13px 'Jost',sans-serif;}
 .edit-bar button{background:none;border:none;color:var(--ink);font:600 13px 'Jost',sans-serif;text-decoration:underline;}
 
 .edit-action-bar{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 18px;background:var(--bg);border-top:1px solid var(--line);}
 .edit-action-bar button{flex:1;border-radius:10px;padding:12px;font:600 13px 'Jost',sans-serif;border:none;}
-.btn-delete{background:transparent;border:1px solid var(--wine)!important;color:var(--wine-text);}
 .btn-add{background:linear-gradient(135deg,var(--gold-light),var(--gold));color:var(--ink);}
 
 /* Overlays / modals */
@@ -115,6 +113,7 @@ img{max-width:100%;display:block;}
 .row-btns{display:flex;gap:10px;margin-top:18px;}
 .row-btns button{flex:1;border-radius:10px;padding:12px;font:600 13px 'Jost',sans-serif;border:none;}
 .btn-outline{background:transparent;border:1px solid var(--border-card)!important;color:var(--cream);}
+.btn-outline.active{border-color:var(--gold)!important;background:rgba(201,162,39,.12);color:var(--gold-light);}
 .btn-gold{background:linear-gradient(135deg,var(--gold-light),var(--gold));color:var(--ink);}
 .btn-gold:disabled{opacity:.5;}
 

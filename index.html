@@ -23,7 +23,7 @@
 </header>
 
 <div class="edit-bar" id="editBar" hidden>
-  <span id="editBarLabel">MODO EDICIÓN · 0 seleccionadas</span>
+  <span>MODO EDICIÓN · toca una prenda para editarla</span>
   <button type="button" id="editDoneBtn">Listo</button>
 </div>
 
@@ -34,7 +34,6 @@
 </main>
 
 <div class="edit-action-bar" id="editActionBar" hidden>
-  <button type="button" class="btn-delete" id="deleteBtn">Eliminar (0)</button>
   <button type="button" class="btn-add" id="addBtn">+ Agregar prenda</button>
 </div>
 
@@ -79,6 +78,28 @@
     </div>
 
     <button type="button" class="btn-ghost" id="addCancelBtn">Cancelar</button>
+  </div>
+</div>
+
+<div class="overlay" id="editItemOverlay" hidden>
+  <div class="sheet">
+    <h2>Editar prenda</h2>
+    <label class="dropzone" id="editDropzone">
+      <img id="editPhotoPreview" alt="">
+      <span id="editDropzoneText">Toca para cambiar la foto</span>
+      <input type="file" accept="image/*" id="editPhotoInput" hidden>
+    </label>
+    <div class="price-field">
+      <input type="number" inputmode="numeric" id="editPriceInput" placeholder="Ej: 120000">
+    </div>
+    <div class="row-btns">
+      <button type="button" class="btn-outline" id="editHideBtn">Ocultar prenda</button>
+    </div>
+    <div class="row-btns">
+      <button type="button" class="btn-outline" id="editDeleteBtn">Eliminar</button>
+      <button type="button" class="btn-gold" id="editSaveBtn">Guardar cambios</button>
+    </div>
+    <button type="button" class="btn-ghost" id="editCancelBtn">Cancelar</button>
   </div>
 </div>
 

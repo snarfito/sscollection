@@ -3,7 +3,6 @@ export const state = {
   whatsapp: '',
   activeCat: null,
   editMode: false,
-  selectedIds: [],
 };
 
 const listeners = [];

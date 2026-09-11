@@ -21,12 +21,18 @@ test('buildCategoryRowHTML marks the active category', () => {
 });
 
 test('buildGridHTML shows an empty state when there are no items', () => {
-  const html = buildGridHTML([], null, false, []);
+  const html = buildGridHTML([], null, false);
   assert.match(html, /Muy pronto, nuevas piezas/);
 });
 
-test('buildGridHTML renders a select circle only in edit mode', () => {
-  const html = buildGridHTML(items, null, true, ['1']);
-  assert.match(html, /data-select="1"/);
-  assert.match(html, /select-circle selected/);
+test('getVisibleItems hides hidden items outside edit mode', () => {
+  const withHidden = [...items, { id: '3', image: 'c.jpg', price: 3000, category: 'Dama', hidden: true }];
+  assert.equal(getVisibleItems(withHidden, null, false).length, 2);
+  assert.equal(getVisibleItems(withHidden, null, true).length, 3);
+});
+
+test('buildGridHTML shows a hidden badge only in edit mode', () => {
+  const withHidden = [{ id: '3', image: 'c.jpg', price: 3000, category: 'Dama', hidden: true }];
+  assert.match(buildGridHTML(withHidden, null, true), /hidden-badge/);
+  assert.doesNotMatch(buildGridHTML(withHidden, null, false), /hidden-badge/);
 });
