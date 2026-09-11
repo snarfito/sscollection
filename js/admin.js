@@ -2,6 +2,7 @@ import { state, notify } from './state.js';
 import { CATEGORIES } from '../shared/categories.js';
 import { formatCOP } from './format.js';
 import { getCachedPin, setCachedPin, clearCachedPin, verifyPin, saveItems, uploadPhoto, deleteItem } from './api-client.js';
+import { toast } from './toast.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -66,14 +67,6 @@ function exitEditMode() {
   state.editMode = false;
   state.selectedIds = [];
   notify();
-}
-
-function toast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove('show'), 1800);
 }
 
 /* ---- Add flow ---- */

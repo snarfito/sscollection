@@ -124,6 +124,7 @@ img{max-width:100%;display:block;}
 .lightbox-info{display:flex;align-items:center;gap:18px;}
 .lightbox-price{font:600 26px 'Playfair Display',serif;color:var(--gold-light);}
 .lightbox-whatsapp{padding:11px 20px;border-radius:24px;background:var(--gold);color:var(--bg);font:600 13px 'Jost',sans-serif;text-decoration:none;}
+.lightbox-share{padding:11px 18px;border-radius:24px;background:transparent;border:1px solid var(--border-card);color:var(--cream);font:600 13px 'Jost',sans-serif;cursor:pointer;}
 .lightbox-hint{font-size:11px;color:rgba(243,234,216,.5);}
 
 /* Toast */
