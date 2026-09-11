@@ -1,4 +1,11 @@
 {
   "cleanUrls": true,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "item" }],
+      "destination": "/api/product"
+    }
+  ]
 }
