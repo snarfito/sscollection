@@ -41,20 +41,28 @@ export function openCropper(file) {
           apply();
         };
 
-        let dragging = false, lastX = 0, lastY = 0;
-        const onDown = (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; };
+        let activePointerId = null, lastX = 0, lastY = 0;
+        const onDown = (e) => {
+          if (activePointerId !== null) return; // a second finger (pinch) must not join the drag
+          activePointerId = e.pointerId;
+          lastX = e.clientX; lastY = e.clientY;
+        };
         const onMove = (e) => {
-          if (!dragging) return;
+          if (e.pointerId !== activePointerId) return;
           tx += e.clientX - lastX;
           ty += e.clientY - lastY;
           lastX = e.clientX; lastY = e.clientY;
           apply();
         };
-        const onUp = () => { dragging = false; };
+        const onUp = (e) => {
+          if (e.pointerId !== activePointerId) return;
+          activePointerId = null;
+        };
 
         frame.addEventListener('pointerdown', onDown);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
 
         apply();
 
@@ -63,6 +71,7 @@ export function openCropper(file) {
           frame.removeEventListener('pointerdown', onDown);
           window.removeEventListener('pointermove', onMove);
           window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onUp);
           cancelBtn.onclick = null;
           confirmBtn.onclick = null;
         }
