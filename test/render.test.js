@@ -36,3 +36,10 @@ test('buildGridHTML shows a hidden badge only in edit mode', () => {
   assert.match(buildGridHTML(withHidden, null, true), /hidden-badge/);
   assert.doesNotMatch(buildGridHTML(withHidden, null, false), /hidden-badge/);
 });
+
+test('buildGridHTML escapes a malicious image/id instead of breaking out of the attribute', () => {
+  const evil = [{ id: '1" onerror="alert(1)', image: 'x.jpg" onerror="alert(2)', price: 1000, category: 'Dama' }];
+  const html = buildGridHTML(evil, null, false);
+  assert.doesNotMatch(html, /onerror="alert/);
+  assert.match(html, /&quot;/);
+});

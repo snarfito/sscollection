@@ -1,13 +1,6 @@
-import { Redis } from '@upstash/redis';
+import { getRedis } from './redis.js';
 
 const CATALOG_KEY = 'sscollection:catalog';
-
-function getRedis() {
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
-}
 
 export async function readCatalog() {
   const items = await getRedis().get(CATALOG_KEY);

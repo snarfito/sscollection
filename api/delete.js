@@ -8,10 +8,10 @@ import { requireAdmin } from './_lib/auth.js';
 // asking the server to read-modify-write it.
 export default async function handler(req, res) {
   if (req.method !== 'DELETE') return res.status(405).end();
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
   const id = req.query.id;
-  if (!id || typeof id !== 'string') {
+  if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
     return res.status(400).json({ error: 'id inválido' });
   }
 

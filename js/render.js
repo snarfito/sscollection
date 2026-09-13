@@ -1,6 +1,14 @@
 import { formatCOP } from './format.js';
 import { CATEGORIES } from '../shared/categories.js';
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 const ICONS = {
   Dama: '/assets/ic-dama.png',
   Caballero: '/assets/ic-caballero.png',
@@ -30,16 +38,20 @@ export function buildGridHTML(items, activeCat, editMode) {
 }
 
 function buildCardHTML(item, editMode) {
+  const id = escapeHtml(item.id);
+  const image = escapeHtml(item.image);
+  const category = escapeHtml(item.category);
+  const price = escapeHtml(formatCOP(item.price));
   return `
-    <div class="card" data-id="${item.id}">
+    <div class="card" data-id="${id}">
       <div class="photo${item.hidden ? ' dimmed' : ''}">
-        <img src="${item.image}" alt="${item.category} ${formatCOP(item.price)}" loading="lazy">
+        <img src="${image}" alt="${category} ${price}" loading="lazy">
         <div class="corner-accent"></div>
         ${editMode && item.hidden ? '<span class="hidden-badge">Oculto</span>' : ''}
       </div>
       <div class="price-row">
-        <span class="tag">${formatCOP(item.price)}</span>
-        <span class="cat-label">${item.category}</span>
+        <span class="tag">${price}</span>
+        <span class="cat-label">${category}</span>
       </div>
     </div>`;
 }
